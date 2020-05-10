@@ -1,6 +1,8 @@
 import std.getopt;
 import std.stdio;
 
+import window : createWindow;
+
 int main(string[] args)
 {
     uint width = 800, height = 600;
@@ -26,6 +28,6 @@ int main(string[] args)
         return 0;
     }
 
-    writeln("Width ", width, ", height ", height);
+    createWindow(args, width, height);
     return 0;
 }
