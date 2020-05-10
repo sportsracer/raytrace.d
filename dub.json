@@ -1,0 +1,8 @@
+{
+	"authors": [
+		"Steffen Wenz"
+	],
+	"description": "D ray tracing demo",
+	"license": "proprietary",
+	"name": "raytraced"
+}
