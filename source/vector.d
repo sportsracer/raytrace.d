@@ -1,6 +1,6 @@
 module vector;
 
-import std.math : sqrt;
+import std.math : approxEqual, sqrt;
 
 struct Vector
 {
@@ -12,6 +12,26 @@ struct Vector
         if (op == "+" || op == "-")
         {
             return mixin("Vector(x "~op~" rhs.x, y "~op~" rhs.y, z "~op~" rhs.z)");
+        }
+
+        Vector opBinary(string op)(const Vector rhs) const
+        if (op == "*")
+        {
+            return Vector(
+                y * rhs.z - z * rhs.y,
+                z * rhs.x - x * rhs.z,
+                x * rhs.y - y * rhs.x
+            );
+        }
+
+        Vector opBinary(string op)(const double rhs) const
+        if (op == "*")
+        {
+            return Vector(
+                x * rhs,
+                y * rhs,
+                z * rhs
+            );
         }
 
         void normalize()
@@ -30,6 +50,11 @@ struct Vector
         double dot(const Vector rhs) const
         {
             return x * rhs.x + y * rhs.y + z * rhs.z;
+        }
+
+        bool perpendicularTo(const Vector other) const
+        {
+            return approxEqual(this.dot(other), 0);
         }
 
     }
@@ -52,6 +77,33 @@ unittest
     assert(approxEqual(vDiff.x, -3));
     assert(approxEqual(vDiff.y, -3));
     assert(approxEqual(vDiff.z, -3));
+}
+
+/// Vector cross product
+unittest
+{
+    import std.math : approxEqual;
+
+    immutable Vector fwd = {0, 0, 1},
+    up = {0, 1, 0},
+    right = fwd * up;
+
+    assert(approxEqual(right.x, -1));
+    assert(approxEqual(right.y, 0));
+    assert(approxEqual(right.z, 0));
+}
+
+/// Vector scaling
+unittest
+{
+    immutable Vector v = {1, 2, 3},
+        vScaled = v * 3;
+
+    import std.math : approxEqual;
+
+    assert(approxEqual(vScaled.x, 3));
+    assert(approxEqual(vScaled.y, 6));
+    assert(approxEqual(vScaled.z, 9));
 }
 
 /// Vector length
@@ -88,9 +140,17 @@ unittest
 {
     import std.math : approxEqual;
 
-    immutable Vector v1 = {1, 2, 3},
-        v2 = {4, 5, 6};
+    {
+        immutable Vector v1 = {1, 2, 3},
+            v2 = {4, 5, 6};
+        auto dot = v1.dot(v2);
+        assert(approxEqual(dot, 32));
+        assert(!v1.perpendicularTo(v2));
+    }
 
-    auto dot = v1.dot(v2);
-    assert(approxEqual(dot, 32));
+    {
+        immutable Vector v1 = {1, 0, 0},
+            v2 = {0, 2, 0};
+        assert(v1.perpendicularTo( v2));
+    }
 }
