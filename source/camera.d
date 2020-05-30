@@ -40,7 +40,7 @@ struct Camera
 
         foreach (object; objects)
         {
-            if (object.hit(ray))
+            if (!object.hit(ray).isNull)
             {
                 return true;
             }

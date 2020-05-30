@@ -7,6 +7,13 @@ struct Ray
 {
     Vector orig, dir;
 
+    this(const Vector orig, const Vector dir)
+    {
+        this.orig = orig;
+        this.dir = dir;
+        this.dir.normalize();
+    }
+
     static Ray fromTo(const Vector orig, const Vector dest)
     in
     {
@@ -14,8 +21,7 @@ struct Ray
     }
     do
     {
-        Vector _dir = dest - orig;
-        _dir.normalize();
+        immutable Vector _dir = dest - orig;
         return Ray(orig, _dir);
     }
 }
