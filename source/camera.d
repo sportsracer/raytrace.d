@@ -1,7 +1,10 @@
 module camera;
 
+import std.typecons : Nullable;
+
 import ray : Ray;
 import sceneobject : SceneObject;
+import scene : Scene;
 import vector : Vector;
 
 
@@ -32,23 +35,11 @@ struct Camera
         return Camera(origin, _upperLeft, _width, _height);
     }
 
-
-    bool renderPoint(double x, double y, const SceneObject[] objects) const
+    Ray rayForPixel(double x, double y) const
     {
         immutable Vector pointInPlane = upperLeft + width * x + height * y;
-        immutable Ray ray = Ray.fromTo(origin, pointInPlane);
-
-        foreach (object; objects)
-        {
-            if (!object.hit(ray).isNull)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return Ray.fromTo(origin, pointInPlane);
     }
-
 }
 
 unittest

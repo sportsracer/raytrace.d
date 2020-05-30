@@ -1,6 +1,6 @@
 module vector;
 
-import std.math : approxEqual, sqrt;
+import std.math : acos, approxEqual, sqrt;
 
 struct Vector
 {
@@ -57,6 +57,14 @@ struct Vector
             return approxEqual(this.dot(other), 0);
         }
 
+        double angleWith(const Vector other) const
+        {
+            immutable double dot = this.dot(other),
+                myLength = this.length(),
+                otherLength = other.length(),
+                term = dot / (myLength * otherLength);
+            return acos(term);
+        }
     }
 }
 
@@ -152,5 +160,33 @@ unittest
         immutable Vector v1 = {1, 0, 0},
             v2 = {0, 2, 0};
         assert(v1.perpendicularTo( v2));
+    }
+}
+
+/// Computing angles
+unittest
+{
+    import std.math : approxEqual, PI, PI_2;
+
+    immutable Vector v1 = {1, 0, 0};
+
+    {
+        immutable Vector v2 = {2, 0, 0};
+        assert(approxEqual(v1.angleWith(v2), 0));
+    }
+
+    {
+        immutable Vector v2 = {-1, 0, 0};
+        assert(approxEqual(v1.angleWith(v2), PI));
+    }
+
+    {
+        immutable Vector v2 = {0, 1, 0};
+        assert(approxEqual(v1.angleWith(v2), PI_2));
+    }
+
+    {
+        immutable Vector v2 = {0, 0.00001, 0};
+        assert(v1.angleWith(v2) < PI_2);
     }
 }
