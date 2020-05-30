@@ -1,4 +1,5 @@
 import std.conv;
+import std.random;
 import std.stdio;
 
 import cairo.Context;
@@ -46,11 +47,22 @@ class Canvas : DrawingArea
         // construct scene
         scene = new Scene();
         scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 0.75);
-        scene.objects = [
-            new Sphere(Vector(0, 1, -6), 1),
-            new Sphere(Vector(1, 0, -4), 1),
-            new Sphere(Vector(-0.8, 0, -2), 1),
-        ];
+        // ten smaller spheres closer to light source
+        foreach (i; 0 .. 10)
+        {
+            immutable double x = uniform(-2.0, 2.0),
+                y = uniform(-2.0, 0.0),
+                z = uniform(-4.0, -2.0);
+            scene.objects ~= new Sphere(Vector(x, y, z), 0.2);
+        }
+        // ten larger spheres at bottom of scene, so we can see shadows in action
+        foreach (i; 0 .. 10)
+        {
+            immutable double x = uniform(-2.0, 2.0),
+                y = uniform(0.0, 2.0),
+                z = uniform(-4.0, -2.0);
+            scene.objects ~= new Sphere(Vector(x, y, z), 0.8);
+        }
         scene.lightSource = Vector(0, -4, 0);
     }
 

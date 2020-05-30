@@ -47,10 +47,22 @@ class Scene
 
         return 0.0;
     }
-    
+
     double illuminationAt(const Ray pointNormal) const
     {
         immutable Ray toLight = Ray.fromTo(pointNormal.orig, lightSource);
+
+        auto closest = intersect(toLight);
+        if (!closest.isNull)
+        {
+            immutable double distanceToLight = (lightSource - pointNormal.orig).length(),
+                distanceToBlockingObject = (closest.get.orig - pointNormal.orig).length();
+            // TODO Find more elegant solution to objects not blocking their own light
+            if (distanceToBlockingObject > 0.001 && distanceToBlockingObject < distanceToLight)
+            {
+                return 0.0;
+            }
+        }
 
         // compute illumation from angle of surface normal to light
         immutable angle = toLight.dir.angleWith(pointNormal.dir);
