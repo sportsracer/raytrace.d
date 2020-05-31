@@ -8,32 +8,30 @@ import ray : Ray;
 import sceneobject : SceneObject;
 import vector : Vector;
 
+// Point and surface normal on a scene object
+struct SceneObjectIntersection {
+    const {
+        SceneObject sceneObject;
+        Ray intersection;
+    }
+
+    // convenience accessors
+    Vector point() const
+    {
+        return intersection.orig;
+    }
+
+    Vector normal() const
+    {
+        return intersection.dir;
+    }
+}
+
 class Scene
 {
     Camera camera;
     Vector lightSource;
-    SceneObject[] objects = [];
-
-    Nullable!Ray intersect(const Ray ray) const
-    {
-        Nullable!Ray closest;
-        double closestDistance = double.max;
-
-        foreach (object; objects)
-        {
-            immutable auto hit = object.hit(ray);
-            if (!hit.isNull)
-            {
-                immutable double distance = (hit.get.orig - camera.origin).length();
-                if (closest.isNull || distance < closestDistance)
-                {
-                    closest = hit;
-                    closestDistance = distance;
-                }
-            }
-        }
-        return closest;
-    }
+    SceneObject[] objects;
 
     double renderPoint(double x, double y) const
     {
@@ -48,24 +46,53 @@ class Scene
         return 0.0;
     }
 
-    double illuminationAt(const Ray pointNormal) const
+    Nullable!SceneObjectIntersection intersect(const Ray ray) const
     {
-        immutable Ray toLight = Ray.fromTo(pointNormal.orig, lightSource);
+        return intersect(ray, null);
+    }
 
-        auto closest = intersect(toLight);
+    Nullable!SceneObjectIntersection intersect(const Ray ray, const SceneObject except) const
+    {
+        Nullable!SceneObjectIntersection closest;
+        double closestDistance = double.max;
+
+        foreach (object; objects)
+        {
+            if (object == except)
+            {
+                continue;
+            }
+            immutable auto hit = object.hit(ray);
+            if (!hit.isNull)
+            {
+                immutable double distance = (hit.get.orig - camera.origin).length();
+                if (closest.isNull || distance < closestDistance)
+                {
+                    closest = SceneObjectIntersection(object, hit.get);
+                    closestDistance = distance;
+                }
+            }
+        }
+        return closest;
+    }
+
+    double illuminationAt(const SceneObjectIntersection intersection) const
+    {
+        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource);
+
+        auto closest = intersect(toLight, intersection.sceneObject);
         if (!closest.isNull)
         {
-            immutable double distanceToLight = (lightSource - pointNormal.orig).length(),
-                distanceToBlockingObject = (closest.get.orig - pointNormal.orig).length();
-            // TODO Find more elegant solution to objects not blocking their own light
-            if (distanceToBlockingObject > 0.001 && distanceToBlockingObject < distanceToLight)
+            immutable double distanceToLight = (lightSource - intersection.point).length(),
+                distanceToBlockingObject = (closest.get.point - intersection.point).length();
+            if (distanceToBlockingObject < distanceToLight)
             {
                 return 0.0;
             }
         }
 
         // compute illumation from angle of surface normal to light
-        immutable angle = toLight.dir.angleWith(pointNormal.dir);
+        immutable angle = toLight.dir.angleWith(intersection.normal);
         if (angle > PI_2)
         {
             return 0.0;

@@ -47,6 +47,7 @@ class Canvas : DrawingArea
         // construct scene
         scene = new Scene();
         scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 0.75);
+        scene.objects = [];
         // ten smaller spheres closer to light source
         foreach (i; 0 .. 10)
         {
