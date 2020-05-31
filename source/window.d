@@ -11,6 +11,8 @@ import gtk.MainWindow;
 import gtk.Widget;
 
 import camera : Camera;
+import color : Color;
+import material : Material;
 import scene : Scene;
 import sceneobject : SceneObject;
 import sphere : Sphere;
@@ -46,15 +48,19 @@ class Canvas : DrawingArea
 
         // construct scene
         scene = new Scene();
+        scene.lightSource = Vector(0, -4, 0);
         scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 0.75);
+
+        // generate objects
         scene.objects = [];
         // ten smaller spheres closer to light source
         foreach (i; 0 .. 10)
         {
+            const auto material = new Material(Color(uniform(0.5, 1), uniform(0.0, 0.5), uniform(0.0, 0.5)));
             immutable double x = uniform(-2.0, 2.0),
                 y = uniform(-2.0, 0.0),
                 z = uniform(-4.0, -2.0);
-            scene.objects ~= new Sphere(Vector(x, y, z), 0.2);
+            scene.objects ~= new Sphere(material, Vector(x, y, z), 0.2);
         }
         // ten larger spheres at bottom of scene, so we can see shadows in action
         foreach (i; 0 .. 10)
@@ -62,9 +68,8 @@ class Canvas : DrawingArea
             immutable double x = uniform(-2.0, 2.0),
                 y = uniform(0.0, 2.0),
                 z = uniform(-4.0, -2.0);
-            scene.objects ~= new Sphere(Vector(x, y, z), 0.8);
+            scene.objects ~= new Sphere(Material.white, Vector(x, y, z), 0.8);
         }
-        scene.lightSource = Vector(0, -4, 0);
     }
 
     bool onDraw(Scoped!Context context, Widget _)
@@ -82,12 +87,11 @@ class Canvas : DrawingArea
             foreach (int x; 0..width-1)
             {
                 immutable double xf = to!double(x) / width,
-                    yf = to!double(y) / height,
-                    brightness = scene.renderPoint(xf, yf);
-                immutable ubyte val = to!ubyte(brightness * 255.0);
-                row[x * depth] = val;
-                row[x * depth + 1] = val;
-                row[x * depth + 2] = val;
+                    yf = to!double(y) / height;
+                immutable auto color = scene.renderPoint(xf, yf).toRGBBytes();
+                row[x * depth] = color.b;
+                row[x * depth + 1] = color.g;
+                row[x * depth + 2] = color.r;
             }
         }
 

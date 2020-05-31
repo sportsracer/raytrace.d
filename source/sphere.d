@@ -3,6 +3,7 @@ module sphere;
 import std.math : sqrt;
 import std.typecons : Nullable;
 
+import material : Material;
 import ray : Ray;
 import sceneobject : SceneObject;
 import vector : Vector;
@@ -13,8 +14,9 @@ class Sphere : SceneObject
     Vector center;
     double radius;
 
-    this(const Vector center, const double radius)
+    this(const Material material, const Vector center, const double radius)
     {
+        super(material);
         this.center = center;
         this.radius = radius;
     }
@@ -57,7 +59,7 @@ unittest
 {
     import std.math : approxEqual;
 
-    Sphere s = new Sphere(Vector(0, 0, -2), 1);
+    Sphere s = new Sphere(Material.white, Vector(0, 0, -2), 1);
 
     // ray pointing straight at center
     {

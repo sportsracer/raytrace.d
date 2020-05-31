@@ -1,9 +1,9 @@
 module scene;
 
-import std.math : PI_2;
 import std.typecons : Nullable;
 
 import camera : Camera;
+import color : Color;
 import ray : Ray;
 import sceneobject : SceneObject;
 import vector : Vector;
@@ -33,7 +33,7 @@ class Scene
     Vector lightSource;
     SceneObject[] objects;
 
-    double renderPoint(double x, double y) const
+    Color renderPoint(double x, double y) const
     {
         immutable Ray ray = camera.rayForPixel(x, y);
 
@@ -43,7 +43,7 @@ class Scene
             return illuminationAt(closest.get);
         }
 
-        return 0.0;
+        return Color.black;
     }
 
     Nullable!SceneObjectIntersection intersect(const Ray ray) const
@@ -76,7 +76,7 @@ class Scene
         return closest;
     }
 
-    double illuminationAt(const SceneObjectIntersection intersection) const
+    Color illuminationAt(const SceneObjectIntersection intersection) const
     {
         immutable Ray toLight = Ray.fromTo(intersection.point, lightSource);
 
@@ -87,17 +87,14 @@ class Scene
                 distanceToBlockingObject = (closest.get.point - intersection.point).length();
             if (distanceToBlockingObject < distanceToLight)
             {
-                return 0.0;
+                return Color.black;
             }
         }
 
         // compute illumation from angle of surface normal to light
         immutable angle = toLight.dir.angleWith(intersection.normal);
-        if (angle > PI_2)
-        {
-            return 0.0;
-        }
-        return 1.0 - angle / PI_2;
+        auto material = intersection.sceneObject.material;
+        return material.diffuseColor(angle);
     }
 
 }
