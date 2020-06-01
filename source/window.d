@@ -12,6 +12,7 @@ import gtk.Widget;
 
 import camera : Camera;
 import color : Color;
+import light : PointLight;
 import material : Material;
 import scene : Scene;
 import sceneobject : SceneObject;
@@ -48,7 +49,7 @@ class Canvas : DrawingArea
 
         // construct scene
         scene = new Scene();
-        scene.lightSource = Vector(0, -4, 0);
+        scene.lightSource = PointLight(Vector(0, -4, 0), Color.white, 20.0);
         scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 0.75);
 
         // generate objects

@@ -11,9 +11,9 @@ struct Color
     double r, g, b;
 
     Color opBinary(string op)(const Color rhs) const
-    if (op == "+")
+    if (op == "+" || op == "*")
     {
-        return Color(r + rhs.r, g + rhs.g, b + rhs.b);
+        return mixin("Color(r "~op~" rhs.r, g "~op~" rhs.g, b "~op~" rhs.b)");
     }
 
     Color opBinary(string op)(float factor) const
@@ -34,7 +34,7 @@ struct Color
     static auto white = Color(1.0, 1.0, 1.0);
 }
 
-/// Colors can be added and scaled by a factor
+/// Colors can be added, multiplied and scaled by a factor
 unittest
 {
     import std.math : approxEqual;
@@ -51,6 +51,11 @@ unittest
     assert(approxEqual(gray.r, 0.5));
     assert(approxEqual(gray.g, 0.5));
     assert(approxEqual(gray.b, 0.5));
+
+    immutable darkRed = red * gray;
+    assert(darkRed.r < 1);
+    assert(darkRed.g == 0);
+    assert(darkRed.b == 0);
 }
 
 /// Conversion to bytes

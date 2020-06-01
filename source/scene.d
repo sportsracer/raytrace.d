@@ -4,6 +4,7 @@ import std.typecons : Nullable;
 
 import camera : Camera;
 import color : Color;
+import light : PointLight;
 import material : Material;
 import ray : Ray;
 import sceneobject : SceneObject;
@@ -31,7 +32,7 @@ struct SceneObjectIntersection {
 class Scene
 {
     Camera camera;
-    Vector lightSource;
+    PointLight lightSource;
     SceneObject[] objects;
 
     Color renderPoint(double x, double y) const
@@ -82,12 +83,12 @@ class Scene
         const Material material = intersection.sceneObject.material;
 
         // compute illumination
-        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource);
+        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource.pos);
         bool shadowed = false;
         auto closest = intersect(toLight, intersection.sceneObject);
         if (!closest.isNull)
         {
-            immutable double distanceToLight = (lightSource - intersection.point).length(),
+            immutable double distanceToLight = (lightSource.pos - intersection.point).length(),
                 distanceToBlockingObject = (closest.get.point - intersection.point).length();
             if (distanceToBlockingObject < distanceToLight)
             {
@@ -98,9 +99,10 @@ class Scene
         // unless light from source is blocked, compute illumation from angle of surface normal to light
         if (!shadowed)
         {
-            immutable angle = toLight.dir.angleWith(intersection.normal);
-            immutable Color diffuse = material.diffuseColor(angle);
-            color = color + diffuse;
+            immutable double angle = toLight.dir.angleWith(intersection.normal);
+            immutable Color diffuse = material.diffuseColor(angle),
+                illumination = lightSource.illuminationAt(intersection.point);
+            color = color + (diffuse * illumination);
         }
 
         // propagate more rays for reflection

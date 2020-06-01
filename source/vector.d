@@ -53,7 +53,12 @@ struct Vector
 
         double length() const
         {
-            return sqrt(x * x + y * y + z * z);
+            return sqrt(length2);
+        }
+
+        double length2() const
+        {
+            return x * x + y * y + z * z;
         }
 
         bool isNormalized() const
