@@ -59,7 +59,7 @@ unittest
 {
     import std.math : approxEqual;
 
-    Sphere s = new Sphere(Material.white, Vector(0, 0, -2), 1);
+    Sphere s = new Sphere(Material.matteWhite, Vector(0, 0, -2), 1);
 
     // ray pointing straight at center
     {

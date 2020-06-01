@@ -56,7 +56,8 @@ class Canvas : DrawingArea
         // ten smaller spheres closer to light source
         foreach (i; 0 .. 10)
         {
-            const auto material = new Material(Color(uniform(0.5, 1), uniform(0.0, 0.5), uniform(0.0, 0.5)));
+            const auto color = Color(uniform(0.5, 1), uniform(0.0, 0.5), uniform(0.0, 0.5));
+            const auto material = new Material(color, 0.2);
             immutable double x = uniform(-2.0, 2.0),
                 y = uniform(-2.0, 0.0),
                 z = uniform(-4.0, -2.0);
@@ -68,7 +69,7 @@ class Canvas : DrawingArea
             immutable double x = uniform(-2.0, 2.0),
                 y = uniform(0.0, 2.0),
                 z = uniform(-4.0, -2.0);
-            scene.objects ~= new Sphere(Material.white, Vector(x, y, z), 0.8);
+            scene.objects ~= new Sphere(Material.matteWhite, Vector(x, y, z), 0.8);
         }
     }
 

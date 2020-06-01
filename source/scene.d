@@ -4,6 +4,7 @@ import std.typecons : Nullable;
 
 import camera : Camera;
 import color : Color;
+import material : Material;
 import ray : Ray;
 import sceneobject : SceneObject;
 import vector : Vector;
@@ -36,22 +37,21 @@ class Scene
     Color renderPoint(double x, double y) const
     {
         immutable Ray ray = camera.rayForPixel(x, y);
+        return renderRay(ray, 1); // TODO parametrize render depth
+    }
 
-        auto closest = intersect(ray);
+    Color renderRay(const Ray ray, uint depth, const SceneObject except = null) const
+    {
+        auto closest = intersect(ray, except);
         if (!closest.isNull)
         {
-            return illuminationAt(closest.get);
+            return illuminationAt(ray, closest.get, depth);
         }
 
         return Color.black;
     }
 
-    Nullable!SceneObjectIntersection intersect(const Ray ray) const
-    {
-        return intersect(ray, null);
-    }
-
-    Nullable!SceneObjectIntersection intersect(const Ray ray, const SceneObject except) const
+    Nullable!SceneObjectIntersection intersect(const Ray ray, const SceneObject except = null) const
     {
         Nullable!SceneObjectIntersection closest;
         double closestDistance = double.max;
@@ -76,10 +76,14 @@ class Scene
         return closest;
     }
 
-    Color illuminationAt(const SceneObjectIntersection intersection) const
+    Color illuminationAt(const Ray ray, const SceneObjectIntersection intersection, uint depth) const
     {
-        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource);
+        Color color = Color.black;
+        const Material material = intersection.sceneObject.material;
 
+        // compute illumination
+        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource);
+        bool shadowed = false;
         auto closest = intersect(toLight, intersection.sceneObject);
         if (!closest.isNull)
         {
@@ -87,14 +91,31 @@ class Scene
                 distanceToBlockingObject = (closest.get.point - intersection.point).length();
             if (distanceToBlockingObject < distanceToLight)
             {
-                return Color.black;
+                shadowed = true;
             }
         }
 
-        // compute illumation from angle of surface normal to light
-        immutable angle = toLight.dir.angleWith(intersection.normal);
-        auto material = intersection.sceneObject.material;
-        return material.diffuseColor(angle);
+        // unless light from source is blocked, compute illumation from angle of surface normal to light
+        if (!shadowed)
+        {
+            immutable angle = toLight.dir.angleWith(intersection.normal);
+            immutable Color diffuse = material.diffuseColor(angle);
+            color = color + diffuse;
+        }
+
+        // propagate more rays for reflection
+        if (depth > 0)
+        {
+            if (material.reflective > 0)
+            {
+                immutable Vector reflectedDirection = ray.dir.reflect(intersection.normal);
+                immutable Ray reflectedRay = Ray(intersection.point, reflectedDirection);
+                immutable Color reflection = renderRay(reflectedRay, depth - 1, intersection.sceneObject);
+                color = color + reflection * material.reflective;
+            }
+        }
+
+        return color;
     }
 
 }

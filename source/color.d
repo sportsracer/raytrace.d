@@ -1,5 +1,6 @@
 module color;
 
+import std.algorithm : min;
 import std.typecons : Tuple, tuple;
 import std.conv : to;
 
@@ -23,10 +24,10 @@ struct Color
 
     RGBBytes toRGBBytes() const
     {
-        immutable ubyte _r = to!ubyte( 255.0 * this.r),
-        _g = to!ubyte( 255.0 * this.g),
-        _b = to!ubyte( 255.0 * this.b);
-        return RGBBytes( _r, _g, _b);
+        immutable ubyte _r = to!ubyte(255.0 * min(this.r, 1.0)),
+            _g = to!ubyte(255.0 * min(this.g, 1.0)),
+            _b = to!ubyte(255.0 * min(this.b, 1.0));
+        return RGBBytes(_r, _g, _b);
     }
 
     static auto black = Color(0.0, 0.0, 0.0);
@@ -60,4 +61,11 @@ unittest
     assert(bytes.r == 255);
     assert(bytes.g == 127);
     assert(bytes.b == 127);
+
+    // test that "HDR" color values greater than 1.0 are truncated to 255 when converting to bytes
+    immutable hdr = Color(0.5, 2.0, 2.0),
+        hdrBytes = hdr.toRGBBytes();
+    assert(hdrBytes.r == 127);
+    assert(hdrBytes.g == 255);
+    assert(hdrBytes.b == 255);
 }
