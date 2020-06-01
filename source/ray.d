@@ -34,7 +34,7 @@ unittest
 
     // Check that a ray's length gets normalized
     immutable Ray r = Ray.fromTo(Vector(1, 1, 1), Vector(2, 2, 2));
-    assert(approxEqual(r.dir.length(), 1));
+    assert(r.dir.isNormalized());
 
     // Check that a ray with origin = destination, i.e. undefined direction, violates the method contract
     assertThrown!AssertError(Ray.fromTo(Vector(1, 1, 1), Vector(1, 1, 1)));

@@ -35,6 +35,15 @@ struct Vector
         }
 
         void normalize()
+        in
+        {
+            assert(length > 0);
+        }
+        out
+        {
+            assert(approxEqual(length, 1));
+        }
+        do
         {
             immutable double invLength = 1.0 / length;
             x *= invLength;
@@ -45,6 +54,11 @@ struct Vector
         double length() const
         {
             return sqrt(x * x + y * y + z * z);
+        }
+
+        bool isNormalized() const
+        {
+            return approxEqual(length, 1);
         }
 
         double dot(const Vector rhs) const
@@ -65,40 +79,53 @@ struct Vector
                 term = dot / (myLength * otherLength);
             return acos(term);
         }
+
+        /// Reflection of this vector on a surface represented by normal
+        Vector reflect(const Vector normal) const
+        in
+        {
+            // the implementation is simplified by assuming the surface normal is of length 1
+            assert(normal.isNormalized());
+        }
+        out (result)
+        {
+            assert(approxEqual(this.length, result.length));
+        }
+        do
+        {
+            return this - normal * 2 * this.dot(normal);
+        }
     }
+}
+
+// Helper function for unit tests
+bool approxEqualVector(const Vector v1, const Vector v2)
+{
+    return approxEqual(v1.x, v2.x)
+        && approxEqual(v1.y, v2.y)
+        && approxEqual(v1.z, v2.z);
 }
 
 /// Addition & subtraction of vectors
 unittest
 {
-    import std.math : approxEqual;
-
     immutable Vector v1 = {1, 2, 3},
         v2 = {4, 5, 6},
         vSum = v1 + v2,
         vDiff = v1 - v2;
 
-    assert(approxEqual(vSum.x, 5));
-    assert(approxEqual(vSum.y, 7));
-    assert(approxEqual(vSum.z, 9));
-
-    assert(approxEqual(vDiff.x, -3));
-    assert(approxEqual(vDiff.y, -3));
-    assert(approxEqual(vDiff.z, -3));
+    assert(vSum.approxEqualVector(Vector(5, 7, 9)));
+    assert(vDiff.approxEqualVector(Vector(-3, -3, -3)));
 }
 
 /// Vector cross product
 unittest
 {
-    import std.math : approxEqual;
-
     immutable Vector fwd = {0, 0, 1},
-    up = {0, 1, 0},
-    right = fwd * up;
+        up = {0, 1, 0},
+        right = fwd * up;
 
-    assert(approxEqual(right.x, -1));
-    assert(approxEqual(right.y, 0));
-    assert(approxEqual(right.z, 0));
+    assert(approxEqualVector(right, Vector(-1, 0, 0)));
 }
 
 /// Vector scaling
@@ -107,18 +134,12 @@ unittest
     immutable Vector v = {1, 2, 3},
         vScaled = v * 3;
 
-    import std.math : approxEqual;
-
-    assert(approxEqual(vScaled.x, 3));
-    assert(approxEqual(vScaled.y, 6));
-    assert(approxEqual(vScaled.z, 9));
+    assert(approxEqualVector(vScaled, Vector(3, 6, 9)));
 }
 
 /// Vector length
 unittest
 {
-    import std.math : approxEqual;
-
     immutable Vector v1 = {1, 0, 0},
         v2 = {3, 3, 3};
 
@@ -129,25 +150,35 @@ unittest
 /// Normalization
 unittest
 {
-    import std.math : approxEqual;
+    import core.exception : AssertError;
+    import std.exception : assertThrown;
 
-    Vector v1 = {2, 0, 0},
-        v2 = {1, 1, 1};
+    {
+        Vector v = {2, 0, 0};
+        assert(!v.isNormalized());
+        v.normalize();
+        assert(approxEqual(v.x, 1));
+        assert(v.isNormalized());
+    }
 
-    v1.normalize();
-    assert(approxEqual(v1.x, 1));
-    assert(approxEqual(v1.length(), 1));
+    {
+        Vector v = {1, 1, 1};
+        assert(!v.isNormalized());
+        v.normalize();
+        assert(approxEqual(v.x, 1.0 / sqrt( 3.0)));
+        assert(v.isNormalized());
+    }
 
-    v2.normalize();
-    assert(approxEqual(v2.x, 1.0 / sqrt(3.0)));
-    assert(approxEqual(v2.length(), 1));
+    {
+        // can't normalize vector of length zero
+        Vector v = {0, 0, 0};
+        assertThrown!AssertError(v.normalize());
+    }
 }
 
 /// Dot product
 unittest
 {
-    import std.math : approxEqual;
-
     {
         immutable Vector v1 = {1, 2, 3},
             v2 = {4, 5, 6};
@@ -166,7 +197,7 @@ unittest
 /// Computing angles
 unittest
 {
-    import std.math : approxEqual, PI, PI_2;
+    import std.math : PI, PI_2;
 
     immutable Vector v1 = {1, 0, 0};
 
@@ -189,4 +220,23 @@ unittest
         immutable Vector v2 = {0, 0.00001, 0};
         assert(v1.angleWith(v2) < PI_2);
     }
+}
+
+/// Reflecting vectors
+unittest
+{
+    immutable Vector normal = {0, 0, 1};
+
+    {
+        immutable Vector vIn = {0, 0, -2},
+            vOut = vIn.reflect(normal);
+        assert(approxEqualVector(vOut, Vector(0, 0, 2)));
+    }
+
+    {
+        immutable Vector vIn = {1, 1, 1},
+            vOut = vIn.reflect(normal);
+        assert(approxEqualVector(vOut, Vector(1, 1, -1)));
+    }
+
 }
