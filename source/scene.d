@@ -63,7 +63,7 @@ class Scene
             {
                 continue;
             }
-            immutable auto hit = object.hit(ray);
+            immutable hit = object.hit(ray);
             if (!hit.isNull)
             {
                 immutable double distance = (hit.get.orig - camera.origin).length();

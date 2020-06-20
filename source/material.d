@@ -40,11 +40,11 @@ unittest
     import std.math : PI;
 
     // ambient light is completely black at 180° angle
-    immutable auto black = Material.matteWhite.diffuseColor(PI);
+    immutable black = Material.matteWhite.diffuseColor(PI);
     assert(black == Color.black);
 
     // ... and not black if illuminated directly
-    immutable auto notBlack = Material.matteWhite.diffuseColor(0);
+    immutable notBlack = Material.matteWhite.diffuseColor(0);
     assert(notBlack.r > 0);
     assert(notBlack.g > 0);
     assert(notBlack.b > 0);

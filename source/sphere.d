@@ -44,7 +44,7 @@ class Sphere : SceneObject
     override Nullable!Ray hit(const Ray ray) const
     {
         Nullable!Ray intersection;
-        immutable auto distance = intersectionDistance(ray);
+        immutable distance = intersectionDistance(ray);
         if (distance >= 0)
         {
             immutable Vector intersectionPoint = ray.orig + ray.dir * distance,
