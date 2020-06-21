@@ -4,7 +4,7 @@ import std.typecons : Nullable;
 
 import camera : Camera;
 import color : Color;
-import light : PointLight;
+import light : SphericalLight;
 import material : Material;
 import ray : Ray;
 import sceneobject : SceneObject;
@@ -32,7 +32,7 @@ struct SceneObjectIntersection {
 class Scene
 {
     Camera camera;
-    PointLight lightSource;
+    SphericalLight light;
     SceneObject[] objects;
 
     Color renderPoint(double x, double y) const
@@ -83,26 +83,29 @@ class Scene
         const Material material = intersection.sceneObject.material;
 
         // compute illumination
-        immutable Ray toLight = Ray.fromTo(intersection.point, lightSource.pos);
-        bool shadowed = false;
-        auto closest = intersect(toLight, intersection.sceneObject);
-        if (!closest.isNull)
+        foreach (lightSource; light.samplePoints)
         {
-            immutable double distanceToLight = (lightSource.pos - intersection.point).length(),
-                distanceToBlockingObject = (closest.get.point - intersection.point).length();
-            if (distanceToBlockingObject < distanceToLight)
+            immutable Ray toLight = Ray.fromTo(intersection.point, lightSource.pos);
+            bool shadowed = false;
+            const closest = intersect(toLight, intersection.sceneObject);
+            if (!closest.isNull)
             {
-                shadowed = true;
+                immutable double distanceToLight = (lightSource.pos - intersection.point).length2,
+                    distanceToBlockingObject = (closest.get.point - intersection.point).length2;
+                if (distanceToBlockingObject < distanceToLight)
+                {
+                    shadowed = true;
+                }
             }
-        }
 
-        // unless light from source is blocked, compute illumation from angle of surface normal to light
-        if (!shadowed)
-        {
-            immutable double angle = toLight.dir.angleWith(intersection.normal);
-            immutable Color diffuse = material.diffuseColor(angle),
+            // unless light from source is blocked, compute illumation from angle of surface normal to light
+            if (!shadowed)
+            {
+                immutable double angle = toLight.dir.angleWith(intersection.normal);
+                immutable Color diffuse = material.diffuseColor(angle),
                 illumination = lightSource.illuminationAt(intersection.point);
-            color = color + (diffuse * illumination);
+                color = color + (diffuse * illumination);
+            }
         }
 
         // propagate more rays for reflection
