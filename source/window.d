@@ -2,6 +2,7 @@ module window;
 
 import std.conv;
 import std.datetime.stopwatch;
+import std.parallelism;
 import std.stdio;
 
 import cairo.Context;
@@ -52,8 +53,25 @@ class Canvas : DrawingArea
             stride = img.getStride(),
             depth = 4;
 
-        ubyte* pixels = img.getData();
+        // Helper function to log rendering progress
+        uint rowsRendered;
+        void rowRendered()
+        {
+            if (++rowsRendered % 100 == 0)
+            {
+                stderr.writeln(rowsRendered, "/", height, " rows rendered");
+            }
+        }
+
+        // Array of row indices to iterate over
+        int[] ys;
         foreach (int y; 0..height-1)
+        {
+            ys ~= y;
+        }
+
+        ubyte* pixels = img.getData();
+        foreach (int y; ys.parallel)
         {
             ubyte* row = &pixels[y * stride];
             foreach (int x; 0..width-1)
@@ -66,6 +84,7 @@ class Canvas : DrawingArea
                 row[x * depth + 1] = rgb.g;
                 row[x * depth + 2] = rgb.r;
             }
+            rowRendered();
         }
     }
 
