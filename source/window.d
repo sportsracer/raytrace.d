@@ -1,6 +1,7 @@
 module window;
 
 import std.conv;
+import std.datetime.stopwatch;
 import std.stdio;
 
 import cairo.Context;
@@ -34,6 +35,7 @@ class Canvas : DrawingArea
 {
     Scene scene;
     ImageSurface img;
+    bool rendered;
 
     this(Scene scene, uint width, uint height)
     {
@@ -43,7 +45,7 @@ class Canvas : DrawingArea
         addOnDraw(&onDraw);
     }
 
-    bool onDraw(Scoped!Context context, Widget _)
+    void render()
     {
         immutable int width = img.getWidth(),
             height = img.getHeight(),
@@ -64,6 +66,22 @@ class Canvas : DrawingArea
                 row[x * depth + 1] = rgb.g;
                 row[x * depth + 2] = rgb.r;
             }
+        }
+    }
+
+    bool onDraw(Scoped!Context context, Widget _)
+    {
+        if (!rendered) {
+            StopWatch stopwatch;
+            stopwatch.start();
+
+            render();
+
+            stopwatch.stop();
+            const secs = stopwatch.peek.total!"seconds";
+            stderr.writeln("Rendered scene in ", secs, "s");
+
+            rendered = true;
         }
 
         context.setSourceSurface(img, 0, 0);
