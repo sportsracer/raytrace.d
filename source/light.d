@@ -1,6 +1,11 @@
 module light;
 
+import std.typecons : Nullable;
+
 import color : Color;
+import ray : Ray;
+import scene : Scene;
+import sceneobject : Hit, SceneObject;
 import sphere : Sphere;
 import vector : Vector;
 
@@ -27,7 +32,7 @@ struct PointLight
 }
 
 /** Base object for volumetric lights, defined as a collection of point lights. */
-interface Light
+abstract class Light : SceneObject
 {
     const(PointLight[]) samplePoints() const;
 }
@@ -72,6 +77,23 @@ class SphericalLight : Light
     override const(PointLight[]) samplePoints() const
     {
         return precomputedSamplePoints;
+    }
+
+    override Nullable!Hit computeHit(const Ray ray) const
+    {
+        Nullable!Hit hit;
+        auto intersection = sphere.hit(ray);
+        if (!intersection.isNull)
+        {
+            hit = Hit(this, intersection.get);
+        }
+        return hit;
+    }
+
+    // TODO move to super type
+    override Color illuminationAt(const Hit hit, const Ray ray, uint depth) const
+    {
+        return color * intensity;
     }
 
 }

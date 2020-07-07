@@ -4,123 +4,85 @@ import std.typecons : Nullable;
 
 import camera : Camera;
 import color : Color;
-import light : SphericalLight;
+import light : Light;
 import material : Material;
 import ray : Ray;
-import sceneobject : SceneObject;
+import sceneobject : Hit, SceneObject, SolidSceneObject;
 import vector : Vector;
 
-// Point and surface normal on a scene object
-struct SceneObjectIntersection {
-    const {
-        SceneObject sceneObject;
-        Ray intersection;
-    }
-
-    // convenience accessors
-    Vector point() const
-    {
-        return intersection.orig;
-    }
-
-    Vector normal() const
-    {
-        return intersection.dir;
-    }
-}
+immutable renderDepth = 1;
 
 class Scene
 {
     Camera camera;
-    SphericalLight light;
-    SceneObject[] objects;
+    Light[] lights;
+    SolidSceneObject[] objects;
+
+    void addObject(Light light)
+    {
+        this.lights ~= light;
+        light.scene = this;
+    }
+
+    void addObject(SolidSceneObject solidSceneObject)
+    {
+        this.objects ~= solidSceneObject;
+        solidSceneObject.scene = this;
+    }
 
     Color renderPoint(double x, double y) const
     {
         immutable Ray ray = camera.rayForPixel(x, y);
-        return renderRay(ray, 1); // TODO parametrize render depth
+        return renderRay(ray, renderDepth);
     }
 
     Color renderRay(const Ray ray, uint depth, const SceneObject except = null) const
     {
-        auto closest = intersect(ray, except);
+        const closest = intersect(ray, except);
         if (!closest.isNull)
         {
-            return illuminationAt(ray, closest.get, depth);
+            const Hit hit = closest.get;
+            return hit.sceneObject.illuminationAt(hit, ray, depth);
         }
 
         return Color.black;
     }
 
-    Nullable!SceneObjectIntersection intersect(const Ray ray, const SceneObject except = null) const
+    Nullable!Hit intersect(const Ray ray, const SceneObject except = null) const
     {
-        Nullable!SceneObjectIntersection closest;
+        Nullable!Hit closest;
         double closestDistance = double.max;
 
-        foreach (object; objects)
+        void findClosestHit(const SceneObject object)
         {
             if (object == except)
             {
-                continue;
+                return;
             }
-            immutable hit = object.hit(ray);
+
+            const hit = object.computeHit(ray);
             if (!hit.isNull)
             {
-                immutable double distance = (hit.get.orig - camera.origin).length();
+                immutable distance = (hit.get.point - camera.origin).length2;
                 if (closest.isNull || distance < closestDistance)
                 {
-                    closest = SceneObjectIntersection(object, hit.get);
+                    closest = Hit(object, hit.get.intersection);
                     closestDistance = distance;
                 }
             }
         }
+
+        foreach (object; objects)
+        {
+            findClosestHit(object);
+        }
+
+        foreach (light; lights)
+        {
+            findClosestHit(light);
+        }
+
         return closest;
-    }
-
-    Color illuminationAt(const Ray ray, const SceneObjectIntersection intersection, uint depth) const
-    {
-        Color color = Color.black;
-        const Material material = intersection.sceneObject.material;
-
-        // compute illumination
-        foreach (lightSource; light.samplePoints)
-        {
-            immutable Ray toLight = Ray.fromTo(intersection.point, lightSource.pos);
-            bool shadowed = false;
-            const closest = intersect(toLight, intersection.sceneObject);
-            if (!closest.isNull)
-            {
-                immutable double distanceToLight = (lightSource.pos - intersection.point).length2,
-                    distanceToBlockingObject = (closest.get.point - intersection.point).length2;
-                if (distanceToBlockingObject < distanceToLight)
-                {
-                    shadowed = true;
-                }
-            }
-
-            // unless light from source is blocked, compute illumation from angle of surface normal to light
-            if (!shadowed)
-            {
-                immutable double angle = toLight.dir.angleWith(intersection.normal);
-                immutable Color diffuse = material.diffuseColor(angle),
-                illumination = lightSource.illuminationAt(intersection.point);
-                color = color + (diffuse * illumination);
-            }
-        }
-
-        // propagate more rays for reflection
-        if (depth > 0)
-        {
-            if (material.reflective > 0)
-            {
-                immutable Vector reflectedDirection = ray.dir.reflect(intersection.normal);
-                immutable Ray reflectedRay = Ray(intersection.point, reflectedDirection);
-                immutable Color reflection = renderRay(reflectedRay, depth - 1, intersection.sceneObject);
-                color = color + reflection * material.reflective;
-            }
-        }
-
-        return color;
     }
 
 }

@@ -6,7 +6,7 @@ import std.typecons : Nullable;
 
 import material : Material;
 import ray : Ray;
-import sceneobject : SceneObject;
+import sceneobject : Hit, SolidSceneObject;
 import vector : Vector;
 
 /** Three-dimensional sphere, defined by a center and radius. */
@@ -86,7 +86,7 @@ struct Sphere
     }
 }
 
-class SphereSceneObject : SceneObject
+class SphereSceneObject : SolidSceneObject
 {
     Sphere sphere;
 
@@ -96,9 +96,15 @@ class SphereSceneObject : SceneObject
         this.sphere = Sphere(center, radius);
     }
 
-    override Nullable!Ray hit(const Ray ray) const
+    override Nullable!Hit computeHit(const Ray ray) const
     {
-        return sphere.hit(ray);
+        Nullable!Hit hit;
+        auto intersection = sphere.hit(ray);
+        if (!intersection.isNull)
+        {
+            hit = Hit(this, intersection.get);
+        }
+        return hit;
     }
 }
 
@@ -111,28 +117,28 @@ unittest
 
     // ray pointing straight at center
     {
-        immutable Ray r = Ray.fromTo(Vector( 0, 0, 0), Vector(0, 0, -1)),
-            hit = s.hit(r).get;
+        const r = Ray.fromTo(Vector( 0, 0, 0), Vector(0, 0, -1)),
+            hit = s.computeHit(r).get;
         // intersection point
-        assert(approxEqual(hit.orig.x, 0));
-        assert(approxEqual(hit.orig.y, 0));
-        assert(approxEqual(hit.orig.z, -1));
+        assert(approxEqual(hit.point.x, 0));
+        assert(approxEqual(hit.point.y, 0));
+        assert(approxEqual(hit.point.z, -1));
         // surface normal
-        assert(approxEqual(hit.dir.x, 0));
-        assert(approxEqual(hit.dir.y, 0));
-        assert(approxEqual(hit.dir.z, 1));
+        assert(approxEqual(hit.normal.x, 0));
+        assert(approxEqual(hit.normal.y, 0));
+        assert(approxEqual(hit.normal.z, 1));
     }
 
     // ray pointing at point within sphere from "behind"
     {
         immutable Ray r = Ray.fromTo(Vector(1, 1, -3), Vector(0.5, 0.5, -1.5));
-        assert(!s.hit(r).isNull);
+        assert(!s.computeHit(r).isNull);
     }
 
     // ray pointing away from sphere
     {
         immutable Ray r = Ray.fromTo(Vector(0, 0, 0), Vector(0, 0, 1));
-        assert(s.hit(r).isNull);
+        assert(s.computeHit(r).isNull);
     }
 }
 
