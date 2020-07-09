@@ -37,9 +37,9 @@ class Scene
         return renderRay(ray, renderDepth);
     }
 
-    Color renderRay(const Ray ray, uint depth, const SceneObject except = null) const
+    Color renderRay(const Ray ray, uint depth, const SceneObject skipObject = null) const
     {
-        const closest = intersect(ray, except);
+        const closest = intersect(ray, skipObject);
         if (!closest.isNull)
         {
             const Hit hit = closest.get;
@@ -50,16 +50,19 @@ class Scene
         return Color.black;
     }
 
-    Nullable!Hit intersect(const Ray ray, const SceneObject except = null) const
+    Nullable!Hit intersect(const Ray ray, const SceneObject[] skipObjects ...) const
     {
         Nullable!Hit closest;
         double closestDistance = double.max;
 
         void findClosestHit(const SceneObject object)
         {
-            if (object == except)
+            foreach (skipObject; skipObjects)
             {
-                return;
+                if (object == skipObject)
+                {
+                    return;
+                }
             }
 
             immutable hit = object.computeHit(ray);

@@ -41,8 +41,8 @@ abstract class SolidSceneObject : SceneObject
             {
                 immutable Ray toLight = Ray.fromTo(hit.orig, lightSource.pos);
                 bool shadowed = false;
-                const closest = scene.intersect(toLight, light);
-                if (!closest.isNull && closest.get.sceneObject != this)
+                const closest = scene.intersect(toLight, light, this);
+                if (!closest.isNull)
                 {
                     immutable double distanceToLight = (lightSource.pos - hit.orig).length2,
                         distanceToBlockingObject = (closest.get.intersection.orig - hit.orig).length2;
