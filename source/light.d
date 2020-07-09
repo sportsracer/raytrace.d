@@ -5,7 +5,7 @@ import std.typecons : Nullable;
 import color : Color;
 import ray : Ray;
 import scene : Scene;
-import sceneobject : Hit, SceneObject;
+import sceneobject : SceneObject;
 import sphere : Sphere;
 import vector : Vector;
 
@@ -79,19 +79,13 @@ class SphericalLight : Light
         return precomputedSamplePoints;
     }
 
-    override Nullable!Hit computeHit(const Ray ray) const
+    override Nullable!Ray computeHit(const Ray ray) const
     {
-        Nullable!Hit hit;
-        auto intersection = sphere.hit(ray);
-        if (!intersection.isNull)
-        {
-            hit = Hit(this, intersection.get);
-        }
-        return hit;
+        return sphere.hit(ray);
     }
 
     // TODO move to super type
-    override Color illuminationAt(const Hit hit, const Ray ray, uint depth) const
+    override Color illuminationAt(const Ray hit, const Ray ray, uint depth) const
     {
         return color * intensity;
     }

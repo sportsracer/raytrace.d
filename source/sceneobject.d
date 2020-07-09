@@ -9,23 +9,6 @@ import ray : Ray;
 import scene : Scene;
 import vector : Vector;
 
-/* Point and surface normal on a scene object */
-struct Hit {
-    const SceneObject sceneObject;
-    const Ray intersection;
-
-    // convenience accessors
-    Vector point() const
-    {
-        return intersection.orig;
-    }
-
-    Vector normal() const
-    {
-        return intersection.dir;
-    }
-}
-
 /** Object which can be rendered to a raytraced scene. */
 abstract class SceneObject
 {
@@ -33,9 +16,9 @@ abstract class SceneObject
 
     /** Return a ray consisting of intersection point plus surface normal if `r` hits this object's geometry, null
     otherwise. */
-    Nullable!Hit computeHit(const Ray r) const;
+    Nullable!Ray computeHit(const Ray r) const;
 
-    Color illuminationAt(const Hit hit, const Ray ray, uint depth) const;
+    Color illuminationAt(const Ray hit, const Ray ray, uint depth) const;
 }
 
 abstract class SolidSceneObject : SceneObject
@@ -47,7 +30,7 @@ abstract class SolidSceneObject : SceneObject
         this.material = material;
     }
 
-    override Color illuminationAt(const Hit hit, const Ray ray, uint depth) const
+    override Color illuminationAt(const Ray hit, const Ray ray, uint depth) const
     {
         Color color = Color.black;
 
@@ -56,13 +39,13 @@ abstract class SolidSceneObject : SceneObject
         {
             foreach (PointLight lightSource; light.samplePoints)
             {
-                immutable Ray toLight = Ray.fromTo(hit.point, lightSource.pos);
+                immutable Ray toLight = Ray.fromTo(hit.orig, lightSource.pos);
                 bool shadowed = false;
                 const closest = scene.intersect(toLight, light);
                 if (!closest.isNull && closest.get.sceneObject != this)
                 {
-                    immutable double distanceToLight = (lightSource.pos - hit.point).length2,
-                        distanceToBlockingObject = (closest.get.point - hit.point).length2;
+                    immutable double distanceToLight = (lightSource.pos - hit.orig).length2,
+                        distanceToBlockingObject = (closest.get.intersection.orig - hit.orig).length2;
                     if (distanceToBlockingObject < distanceToLight)
                     {
                         shadowed = true;
@@ -72,9 +55,9 @@ abstract class SolidSceneObject : SceneObject
                 // unless light from source is blocked, compute illumation from angle of surface normal to light
                 if (!shadowed)
                 {
-                    immutable double angle = toLight.dir.angleWith(hit.normal);
+                    immutable double angle = toLight.dir.angleWith(hit.dir);
                     immutable Color diffuse = material.diffuseColor( angle),
-                        illumination = lightSource.illuminationAt(hit.point);
+                        illumination = lightSource.illuminationAt(hit.orig);
                     color = color + (diffuse * illumination);
                 }
             }
@@ -85,8 +68,8 @@ abstract class SolidSceneObject : SceneObject
         {
             if (material.reflective > 0)
             {
-                immutable Vector reflectedDirection = ray.dir.reflect(hit.normal);
-                immutable Ray reflectedRay = Ray(hit.point, reflectedDirection);
+                immutable Vector reflectedDirection = ray.dir.reflect(hit.dir);
+                immutable Ray reflectedRay = Ray(hit.orig, reflectedDirection);
                 immutable Color reflection = scene.renderRay(reflectedRay, depth - 1, this);
                 color = color + reflection * material.reflective;
             }

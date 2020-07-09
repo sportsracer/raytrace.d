@@ -1,16 +1,17 @@
 module scene;
 
-import std.typecons : Nullable;
+import std.typecons : Nullable, Tuple;
 
 import camera : Camera;
 import color : Color;
 import light : Light;
-import material : Material;
 import ray : Ray;
-import sceneobject : Hit, SceneObject, SolidSceneObject;
-import vector : Vector;
+import sceneobject : SceneObject, SolidSceneObject;
 
 immutable renderDepth = 1;
+
+/* Point and surface normal on a scene object */
+alias Hit = Tuple!(SceneObject, "sceneObject", Ray, "intersection");
 
 class Scene
 {
@@ -42,7 +43,8 @@ class Scene
         if (!closest.isNull)
         {
             const Hit hit = closest.get;
-            return hit.sceneObject.illuminationAt(hit, ray, depth);
+            const SceneObject sceneObject = hit.sceneObject;
+            return sceneObject.illuminationAt(hit.intersection, ray, depth);
         }
 
         return Color.black;
@@ -60,13 +62,14 @@ class Scene
                 return;
             }
 
-            const hit = object.computeHit(ray);
+            immutable hit = object.computeHit(ray);
             if (!hit.isNull)
             {
-                immutable distance = (hit.get.point - camera.origin).length2;
+                immutable distance = (hit.get.orig - camera.origin).length2;
                 if (closest.isNull || distance < closestDistance)
                 {
-                    closest = Hit(object, hit.get.intersection);
+                    // TODO It's not nice that I cast away const-ness here, is there a better way?
+                    closest = Hit(cast(SceneObject)object, hit.get);
                     closestDistance = distance;
                 }
             }
