@@ -1,3 +1,4 @@
+import std.conv;
 import std.getopt;
 import std.random;
 import std.stdio;
@@ -12,7 +13,7 @@ import sphere : Sphere, SphereSceneObject;
 import vector : Vector;
 import window : createWindow;
 
-Scene buildScene()
+Scene buildScene(double aspectRatio)
 {
     auto scene = new Scene();
 
@@ -22,7 +23,7 @@ Scene buildScene()
     light = new SphericalLight(Vector(0, -4, -3), 2, Color(1, 0, 0), 5.0);
     scene.addObject(light);
 
-    scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 0.75);
+    scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);
 
     // generate objects
 
@@ -75,7 +76,7 @@ int main(string[] args)
         return 0;
     }
 
-    auto scene = buildScene();
+    auto scene = buildScene(to!double(width) / height);
     createWindow(args, scene, width, height);
     return 0;
 }
