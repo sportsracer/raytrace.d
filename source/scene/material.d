@@ -1,15 +1,15 @@
-module material;
+module scene.material;
 
 import std.math : cos, PI_2;
 
-import color : Color;
+import color.color : Color;
 
 class Material
 {
     Color color;
     double reflective;
 
-    this(const Color color, double reflective)
+    this(Color color, double reflective)
     {
         this.color = color;
         this.reflective = reflective;

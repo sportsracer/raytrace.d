@@ -1,6 +1,6 @@
-module ray;
+module geometry.ray;
 
-import vector : Vector;
+import geometry.vector : Vector;
 
 /** Ray of light used to draw three-dimensional scenes. */
 struct Ray

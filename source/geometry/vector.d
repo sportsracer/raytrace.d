@@ -1,4 +1,4 @@
-module vector;
+module geometry.vector;
 
 import std.math : acos, approxEqual, sqrt;
 

@@ -3,14 +3,14 @@ import std.getopt;
 import std.random;
 import std.stdio;
 
-import camera : Camera;
-import color : Color;
-import light : SphericalLight;
-import material : Material;
-import scene : Scene;
-import sceneobject : SceneObject;
-import sphere : Sphere, SphereSceneObject;
-import vector : Vector;
+import color.color : Color;
+import geometry.vector : Vector;
+import scene.camera : Camera;
+import scene.light : SphericalLight;
+import scene.material : Material;
+import scene.scene : Scene;
+import scene.sphere : SphereSceneObject;
+import scene.sceneobject : SceneObject;
 import window : createWindow;
 
 Scene buildScene(double aspectRatio)
@@ -20,7 +20,7 @@ Scene buildScene(double aspectRatio)
     auto light = new SphericalLight(Vector(0.5, 0.5, 0.5), 0.2, Color.white, 5.0);
     scene.addObject(light);
 
-    light = new SphericalLight(Vector(0, -4, -3), 2, Color(1, 0, 0), 5.0);
+    light = new SphericalLight(Vector(0, -4, -3), 0.5, Color(1, 0, 0), 5.0);
     scene.addObject(light);
 
     scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);

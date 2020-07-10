@@ -1,13 +1,13 @@
-module sceneobject;
+module scene.sceneobject;
 
 import std.typecons : Nullable;
 
-import color : Color;
-import light : Light, PointLight;
-import material : Material;
-import ray : Ray;
-import scene : Scene;
-import vector : Vector;
+import color.color : Color;
+import geometry.ray : Ray;
+import geometry.vector : Vector;
+import scene.light : Light, PointLight;
+import scene.material : Material;
+import scene.scene : Scene;
 
 /** Object which can be rendered to a raytraced scene. */
 abstract class SceneObject

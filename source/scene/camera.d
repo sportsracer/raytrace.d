@@ -1,12 +1,9 @@
-module camera;
+module scene.camera;
 
 import std.typecons : Nullable;
 
-import ray : Ray;
-import sceneobject : SceneObject;
-import scene : Scene;
-import vector : Vector;
-
+import geometry.ray : Ray;
+import geometry.vector : Vector;
 
 /** Representation of a view frustrum = camera. */
 struct Camera

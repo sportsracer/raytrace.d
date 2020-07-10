@@ -13,8 +13,8 @@ import gtk.Main;
 import gtk.MainWindow;
 import gtk.Widget;
 
-import color : Color;
-import scene : Scene;
+import color.color : Color;
+import scene.scene : Scene;
 
 void createWindow(string[] args, Scene scene, const uint width, const uint height)
 {

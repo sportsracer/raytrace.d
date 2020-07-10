@@ -1,4 +1,4 @@
-module color;
+module color.color;
 
 import std.algorithm : min;
 import std.typecons : Tuple, tuple;

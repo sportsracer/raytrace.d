@@ -1,13 +1,13 @@
-module light;
+module scene.light;
 
 import std.typecons : Nullable;
 
-import color : Color;
-import ray : Ray;
-import scene : Scene;
-import sceneobject : SceneObject;
-import sphere : Sphere;
-import vector : Vector;
+import color.color : Color;
+import geometry.ray : Ray;
+import geometry.sphere : Sphere;
+import geometry.vector : Vector;
+import scene.scene : Scene;
+import scene.sceneobject : SceneObject;
 
 /**
 * A light represented by a single point in space. Volumetric lights are expressed as a collection of several point

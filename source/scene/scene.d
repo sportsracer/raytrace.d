@@ -1,12 +1,12 @@
-module scene;
+module scene.scene;
 
 import std.typecons : Nullable, Tuple;
 
-import camera : Camera;
-import color : Color;
-import light : Light;
-import ray : Ray;
-import sceneobject : SceneObject, SolidSceneObject;
+import color.color : Color;
+import geometry.ray : Ray;
+import scene.camera : Camera;
+import scene.light : Light;
+import scene.sceneobject : SceneObject, SolidSceneObject;
 
 immutable renderDepth = 1;
 
