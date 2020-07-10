@@ -8,6 +8,7 @@ import geometry.vector : Vector;
 import scene.camera : Camera;
 import scene.light : SphericalLight;
 import scene.material : Material;
+import scene.plane : PlaneSceneObject;
 import scene.scene : Scene;
 import scene.sphere : SphereSceneObject;
 import scene.sceneobject : SceneObject;
@@ -17,7 +18,7 @@ Scene buildScene(double aspectRatio)
 {
     auto scene = new Scene();
 
-    auto light = new SphericalLight(Vector(0.5, 0.5, 0.5), 0.2, Color.white, 5.0);
+    auto light = new SphericalLight(Vector(0.5, 0.5, -1.5), 0.2, Color.white, 5.0);
     scene.addObject(light);
 
     light = new SphericalLight(Vector(0, -4, -3), 0.5, Color(1, 0, 0), 5.0);
@@ -34,7 +35,7 @@ Scene buildScene(double aspectRatio)
             material = new Material(color, 0.2);
         const double x = uniform(-2.0, 2.0),
             y = uniform(-2.0, 0.0),
-            z = uniform(-4.0, -2.0);
+            z = uniform(-6.0, -4.0);
         auto sphere = new SphereSceneObject(material, Vector(x, y, z), 0.2);
         scene.addObject(sphere);
     }
@@ -44,10 +45,16 @@ Scene buildScene(double aspectRatio)
     {
         const double x = uniform(-2.0, 2.0),
             y = uniform(0.0, 2.0),
-            z = uniform(-4.0, -2.0);
+            z = uniform(-6.0, -4.0);
         auto sphere = new SphereSceneObject(Material.matteWhite, Vector(x, y, z), 0.8);
         scene.addObject(sphere);
     }
+
+    // bottom plane
+    auto shinyBlue = new Material(Color(0.2, 0.2, 0.8), 0.4);
+    auto plane = new PlaneSceneObject(shinyBlue, Vector(0, 1, 0), Vector(0, -1, 0));
+    scene.addObject(plane);
+
     return scene;
 }
 
