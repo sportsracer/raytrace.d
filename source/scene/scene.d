@@ -4,11 +4,12 @@ import std.typecons : Nullable, Tuple;
 
 import color.color : Color;
 import geometry.ray : Ray;
+import geometry.vector : Vector;
 import scene.camera : Camera;
 import scene.light : Light;
 import scene.sceneobject : SceneObject, SolidSceneObject;
 
-immutable renderDepth = 1;
+immutable renderDepth = 2;
 
 /* Point and surface normal on a scene object */
 alias Hit = Tuple!(SceneObject, "sceneObject", Ray, "intersection");
@@ -68,7 +69,8 @@ class Scene
             immutable hit = object.computeHit(ray);
             if (!hit.isNull)
             {
-                immutable distance = (hit.get.orig - camera.origin).length2;
+                immutable Vector rayToIntersection = hit.get.orig - ray.orig;
+                immutable double distance = rayToIntersection.length2;
                 if (closest.isNull || distance < closestDistance)
                 {
                     // TODO It's not nice that I cast away const-ness here, is there a better way?
