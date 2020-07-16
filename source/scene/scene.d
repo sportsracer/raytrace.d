@@ -1,5 +1,6 @@
 module scene.scene;
 
+import std.algorithm.searching : any;
 import std.typecons : Nullable, Tuple;
 
 import color.color : Color;
@@ -9,61 +10,75 @@ import scene.camera : Camera;
 import scene.light : Light;
 import scene.sceneobject : SceneObject, SolidSceneObject;
 
+// How many rays are cast recursively?
 immutable renderDepth = 2;
 
-/* Point and surface normal on a scene object */
+/// Point and surface normal on a scene object.
 alias Hit = Tuple!(SceneObject, "sceneObject", Ray, "intersection");
 
+/// A collection of three-dimensional lights and objects which can be rendered, and a camera representing a viewpoint.
 class Scene
 {
     Camera camera;
     Light[] lights;
     SolidSceneObject[] objects;
 
-    void addObject(Light light)
+    /// Add a light to this scene.
+    void addObject(Light light) pure
     {
         this.lights ~= light;
         light.scene = this;
     }
 
-    void addObject(SolidSceneObject solidSceneObject)
+    /// Add a solid object to this scene.
+    void addObject(SolidSceneObject solidSceneObject) pure
     {
         this.objects ~= solidSceneObject;
         solidSceneObject.scene = this;
     }
 
-    Color renderPoint(double x, double y) const
+    /// Render color for ray representing the coordinates (x, y) in the camera frustum.
+    Color renderPoint(double x, double y) const pure
     {
-        immutable Ray ray = camera.rayForPixel(x, y);
+        immutable ray = camera.rayForPixel(x, y);
         return renderRay(ray, renderDepth);
     }
 
-    Color renderRay(const Ray ray, uint depth, const SceneObject skipObject = null) const
+    /**
+    * Render color for `ray`.
+    *
+    * Params:
+    *   ray = Ray representing line of sight, either originating from camera origin, or somewhere else in scene
+    *       e.g for reflections
+    *   depth = Remaining recursive render depth; this gets decreased for recursively cast rays, and stops at zero.
+    *   skipObject = Don't render this object; used for rays originating on surface of an object, to avoid
+    *       self-collision aka "surface acne"
+    */
+    Color renderRay(in Ray ray, uint depth, in SceneObject skipObject = null) const pure
     {
         const closest = intersect(ray, skipObject);
         if (!closest.isNull)
         {
             const Hit hit = closest.get;
+            const Ray intersection = hit.intersection;
             const SceneObject sceneObject = hit.sceneObject;
-            return sceneObject.illuminationAt(hit.intersection, ray, depth);
+            return sceneObject.illuminationAt(intersection, ray, depth);
         }
-
         return Color.black;
     }
 
-    Nullable!Hit intersect(const Ray ray, const SceneObject[] skipObjects ...) const
+    /// Return the closest intersection with a scene object, or null if there is none.
+    Nullable!Hit intersect(in Ray ray, in SceneObject[] skipObjects ...) const pure
     {
         Nullable!Hit closest;
         double closestDistance = double.max;
 
-        void findClosestHit(const SceneObject object)
+        void findClosestHit(in SceneObject object) pure
         {
-            foreach (skipObject; skipObjects)
+            alias isThisObject = (skipObject) => (skipObject is object);
+            if (any!isThisObject(skipObjects))
             {
-                if (object == skipObject)
-                {
-                    return;
-                }
+                return;
             }
 
             immutable hit = object.computeHit(ray);

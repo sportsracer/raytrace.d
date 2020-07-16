@@ -18,11 +18,11 @@ Scene buildScene(double aspectRatio)
 {
     auto scene = new Scene();
 
-    auto light = new SphericalLight(Vector(0.5, 0.5, -1.5), 0.2, Color.white, 5.0);
-    scene.addObject(light);
+    auto whiteLight = new SphericalLight(Vector(0.5, 0.5, -1.5), 0.2, Color.white, 5.0);
+    scene.addObject(whiteLight);
 
-    light = new SphericalLight(Vector(0, -4, -3), 0.5, Color(1, 0, 0), 5.0);
-    scene.addObject(light);
+    auto redLight = new SphericalLight(Vector(0, -4, -3), 0.5, Color(1, 0, 0), 5.0);
+    scene.addObject(redLight);
 
     scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);
 
@@ -32,7 +32,7 @@ Scene buildScene(double aspectRatio)
     foreach (i; 0 .. 10)
     {
         const color = Color(uniform(0.5, 1), uniform(0.0, 0.5), uniform(0.0, 0.5)),
-            material = new Material(color, 0.2);
+            material = Material(color, 0.6);
         const double x = uniform(-2.0, 2.0),
             y = uniform(-2.0, 0.0),
             z = uniform(-6.0, -4.0);
@@ -51,8 +51,8 @@ Scene buildScene(double aspectRatio)
     }
 
     // bottom plane
-    auto shinyBlue = new Material(Color(0.2, 0.2, 0.8), 0.4);
-    auto plane = new PlaneSceneObject(shinyBlue, Vector(0, 1, 0), Vector(0, -1, 0));
+    auto shinyBlue = Material(Color(0.2, 0.2, 0.8), 0.4);
+    auto plane = new PlaneSceneObject(shinyBlue, Vector(0, 0, -6), Vector(0, .1, 1));
     scene.addObject(plane);
 
     return scene;

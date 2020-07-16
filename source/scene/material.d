@@ -4,18 +4,12 @@ import std.math : cos, PI_2;
 
 import color.color : Color;
 
-class Material
+struct Material
 {
     Color color;
     double reflective;
 
-    this(Color color, double reflective)
-    {
-        this.color = color;
-        this.reflective = reflective;
-    }
-
-    Color diffuseColor(double angle) const
+    Color diffuseColor(double angle) const pure
     {
         if (angle > PI_2)
         {
@@ -24,14 +18,9 @@ class Material
         return color * cos(angle);
     }
 
-    static Material matteWhite()
-    {
-        return new Material(Color.white, 0.0);
-    }
-
-    static Material shinyBlack()
-    {
-        return new Material(Color(0.1, 0.1, 0.1), 0.5);
+    immutable static {
+        auto matteWhite = Material(Color.white, 0.0),
+            shinyBlack = Material(Color(0.1, 0.1, 0.1), 0.5);
     }
 }
 

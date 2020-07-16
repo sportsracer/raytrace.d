@@ -9,28 +9,36 @@ import scene.light : Light, PointLight;
 import scene.material : Material;
 import scene.scene : Scene;
 
-/** Object which can be rendered to a raytraced scene. */
+/// Object which can be rendered to a raytraced scene.
 abstract class SceneObject
 {
     Scene scene;
 
     /** Return a ray consisting of intersection point plus surface normal if `r` hits this object's geometry, null
     otherwise. */
-    Nullable!Ray computeHit(const Ray r) const;
+    Nullable!Ray computeHit(in Ray r) const pure;
 
-    Color illuminationAt(const Ray hit, const Ray ray, uint depth) const;
+    /**
+    * Calculate visible color at a point on the surface of this object.
+    *
+    * Params:
+    *   hit = Point on surface of this object, and surface normal
+    *   ray = Ray that is being traced; for effects that depend on viewing direction, such as reflection
+    *   depth = Current rendering depth; rendering aborts when this value reaches zero
+    */
+    Color illuminationAt(in Ray hit, in Ray ray, uint depth) const pure;
 }
 
 abstract class SolidSceneObject : SceneObject
 {
-    const Material material;
+    Material material;
 
-    this(const Material material)
+    this(in Material material) pure
     {
         this.material = material;
     }
 
-    override Color illuminationAt(const Ray hit, const Ray ray, uint depth) const
+    override Color illuminationAt(in Ray hit, in Ray ray, uint depth) const pure
     {
         Color color = Color.black;
 
@@ -56,7 +64,7 @@ abstract class SolidSceneObject : SceneObject
                 if (!shadowed)
                 {
                     immutable double angle = toLight.dir.angleWith(hit.dir);
-                    immutable Color diffuse = material.diffuseColor( angle),
+                    immutable Color diffuse = material.diffuseColor(angle),
                         illumination = lightSource.illuminationAt(hit.orig);
                     color = color + (diffuse * illumination);
                 }

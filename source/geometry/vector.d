@@ -2,109 +2,119 @@ module geometry.vector;
 
 import std.math : acos, approxEqual, sqrt;
 
+// Tolerance for some floating point comparisons.
+immutable epsilon = 1e-6;
+
+/// Vector of length three.
 struct Vector
 {
     double x, y, z;
 
-    pure {
+    /// Add and subtract vectors.
+    Vector opBinary(string op)(in Vector rhs) const pure
+    if (op == "+" || op == "-")
+    {
+        return mixin("Vector(x "~op~" rhs.x, y "~op~" rhs.y, z "~op~" rhs.z)");
+    }
 
-        Vector opBinary(string op)(const Vector rhs) const
-        if (op == "+" || op == "-")
-        {
-            return mixin("Vector(x "~op~" rhs.x, y "~op~" rhs.y, z "~op~" rhs.z)");
-        }
+    /// Cross product.
+    Vector opBinary(string op)(in Vector rhs) const pure
+    if (op == "*")
+    {
+        return Vector(
+            y * rhs.z - z * rhs.y,
+            z * rhs.x - x * rhs.z,
+            x * rhs.y - y * rhs.x
+        );
+    }
 
-        Vector opBinary(string op)(const Vector rhs) const
-        if (op == "*")
-        {
-            return Vector(
-                y * rhs.z - z * rhs.y,
-                z * rhs.x - x * rhs.z,
-                x * rhs.y - y * rhs.x
-            );
-        }
+    /// Scale vector by a factor.
+    Vector opBinary(string op)(double rhs) const pure
+    if (op == "*")
+    {
+        return Vector(
+            x * rhs,
+            y * rhs,
+            z * rhs
+        );
+    }
 
-        Vector opBinary(string op)(const double rhs) const
-        if (op == "*")
-        {
-            return Vector(
-                x * rhs,
-                y * rhs,
-                z * rhs
-            );
-        }
+    /// Modify this vector so that its direction is the same, but its length is 1.
+    void normalize() pure
+    in
+    {
+        assert(length > 0);
+    }
+    out
+    {
+        assert(approxEqual(length, 1));
+    }
+    do
+    {
+        immutable invLength = 1.0 / length;
+        x *= invLength;
+        y *= invLength;
+        z *= invLength;
+    }
 
-        void normalize()
-        in
-        {
-            assert(length > 0);
-        }
-        out
-        {
-            assert(approxEqual(length, 1));
-        }
-        do
-        {
-            immutable double invLength = 1.0 / length;
-            x *= invLength;
-            y *= invLength;
-            z *= invLength;
-        }
+    double length() const pure
+    {
+        return sqrt(length2);
+    }
 
-        double length() const
-        {
-            return sqrt(length2);
-        }
+    /// Length of the vector squared; made available for comparing length of vectors without the costly sqrt.
+    double length2() const pure
+    {
+        return x * x + y * y + z * z;
+    }
 
-        double length2() const
-        {
-            return x * x + y * y + z * z;
-        }
+    /// True if length is 1.0, approximately.
+    bool isNormalized() const pure
+    {
+        return approxEqual(length2, 1.0, 0.0, epsilon);
+    }
 
-        bool isNormalized() const
-        {
-            return approxEqual(length, 1);
-        }
+    /// Dot product.
+    double dot(in Vector rhs) const pure
+    {
+        return x * rhs.x + y * rhs.y + z * rhs.z;
+    }
 
-        double dot(const Vector rhs) const
-        {
-            return x * rhs.x + y * rhs.y + z * rhs.z;
-        }
+    /// True if perpendicular, i.e. at 90° angle to other vector.
+    bool perpendicularTo(in Vector other) const pure
+    {
+        return approxEqual(this.dot(other), 0, 0.0, epsilon);
+    }
 
-        bool perpendicularTo(const Vector other) const
-        {
-            return approxEqual(this.dot(other), 0);
-        }
+    /** Compute angle between this and other vector in radians. */
+    double angleWith(in Vector other) const pure
+    {
+        immutable double dot = this.dot(other),
+            myLength = this.length(),
+            otherLength = other.length(),
+            term = dot / (myLength * otherLength);
+        return acos(term);
+    }
 
-        double angleWith(const Vector other) const
-        {
-            immutable double dot = this.dot(other),
-                myLength = this.length(),
-                otherLength = other.length(),
-                term = dot / (myLength * otherLength);
-            return acos(term);
-        }
-
-        /// Reflection of this vector on a surface represented by normal
-        Vector reflect(const Vector normal) const
-        in
-        {
-            // the implementation is simplified by assuming the surface normal is of length 1
-            assert(normal.isNormalized());
-        }
-        out (result)
-        {
-            assert(approxEqual(this.length, result.length));
-        }
-        do
-        {
-            return this - normal * 2 * this.dot(normal);
-        }
+    /// Reflection of this vector on a surface represented by normal
+    Vector reflect(in Vector normal) const pure
+    in
+    {
+        // the implementation is simplified by assuming the surface normal is of length 1
+        assert(normal.isNormalized());
+    }
+    out (result)
+    {
+        assert(approxEqual(this.length, result.length));
+    }
+    do
+    {
+        return this - normal * 2 * this.dot(normal);
     }
 }
 
 // Helper function for unit tests
-bool approxEqualVector(const Vector v1, const Vector v2)
+bool approxEqualVector(in Vector v1, in Vector v2) pure
 {
     return approxEqual(v1.x, v2.x)
         && approxEqual(v1.y, v2.y)
@@ -195,7 +205,7 @@ unittest
     {
         immutable Vector v1 = {1, 0, 0},
             v2 = {0, 2, 0};
-        assert(v1.perpendicularTo( v2));
+        assert(v1.perpendicularTo(v2));
     }
 }
 

@@ -1,27 +1,25 @@
 module scene.camera;
 
-import std.typecons : Nullable;
-
 import geometry.ray : Ray;
 import geometry.vector : Vector;
 
 /** Representation of a view frustrum = camera. */
 struct Camera
 {
-    Vector origin; // Perspective origin
-    Vector upperLeft; // Point in camera plane which corresponds to upper left corner of rendered image
-    Vector width; // Vector which describes the horizontal border of the camera plane
-    Vector height; // Vector which describes the vertical border of the camera plane
+    Vector origin; /// Perspective origin
+    Vector upperLeft; /// Point in camera plane which corresponds to upper left corner of rendered image
+    Vector width; /// Vector which describes the horizontal border of the camera plane
+    Vector height; /// Vector which describes the vertical border of the camera plane
 
-    static Camera construct(const Vector origin, Vector direction, Vector up, double width, double height)
+    static Camera construct(in Vector origin, in Vector direction, in Vector up, double width, double height) pure
     in
     {
         assert(direction.perpendicularTo(up));
     }
     do
     {
-        auto directionNorm = direction; directionNorm.normalize();
-        auto upNorm = up; upNorm.normalize();
+        Vector directionNorm = direction; directionNorm.normalize();
+        Vector upNorm = up; upNorm.normalize();
 
         immutable Vector center = origin + direction,
             left = directionNorm * upNorm,
@@ -32,7 +30,7 @@ struct Camera
         return Camera(origin, _upperLeft, _width, _height);
     }
 
-    Ray rayForPixel(double x, double y) const
+    Ray rayForPixel(double x, double y) const pure
     {
         immutable Vector pointInPlane = upperLeft + width * x + height * y;
         return Ray.fromTo(origin, pointInPlane);

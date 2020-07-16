@@ -1,5 +1,7 @@
 module scene.light;
 
+import std.array : array;
+import std.algorithm.iteration : map;
 import std.typecons : Nullable;
 
 import color.color : Color;
@@ -19,7 +21,8 @@ struct PointLight
     Color color;
     double intensity;
 
-    Color illuminationAt(const Vector at) const
+    /// Calculate illumination of point `at` by this point light, assuming it's not obstructed/shadowed.
+    Color illuminationAt(in Vector at) const pure
     {
         if (pos == at)
         {
@@ -31,65 +34,68 @@ struct PointLight
     }
 }
 
-/** Base object for volumetric lights, defined as a collection of point lights. */
+/// Base object for volumetric lights, defined as a collection of point lights.
 abstract class Light : SceneObject
 {
-    const(PointLight[]) samplePoints() const;
-}
-
-class SphericalLight : Light
-{
-    Sphere sphere;
     Color color;
     double intensity;
 
-    private PointLight[] precomputedSamplePoints;
-
-    immutable numSamples = 32;
-
-    this(const Sphere sphere, const Color color, double intensity)
+    this(in Color color, double intensity) pure
     {
-        this.sphere = sphere;
         this.color = color;
         this.intensity = intensity;
+    }
 
+    override Color illuminationAt(const Ray hit, const Ray ray, uint depth) const
+    {
+        return color * intensity;
+    }
+
+    /// Volumetric lights overload this method to return point lights on their surface
+    // TODO Return a range instead?
+    const(PointLight[]) samplePoints() const pure;
+}
+
+/// Spherical light, represented by point lights on its surface.
+class SphericalLight : Light
+{
+    Sphere sphere;
+
+    private PointLight[] precomputedSamplePoints;
+    private immutable numSamples = 32;
+
+    this(in Sphere sphere, in Color color, in double intensity)
+    {
+        super(color, intensity);
+        this.sphere = sphere;
         this.precomputedSamplePoints = this.precomputeSamplePoints();
     }
 
-    this(const Vector pos, double radius, const Color color, double intensity)
+    this(in Vector pos, double radius, in Color color, double intensity)
     {
-        const sphere = Sphere(pos, radius);
+        immutable sphere = Sphere(pos, radius);
         this(sphere, color, intensity);
     }
 
     private PointLight[] precomputeSamplePoints()
     {
         const Vector[] points = this.sphere.equidistantPoints(numSamples);
+        // split this light's intensity equally among the point lights
         immutable sampleIntensity = intensity / points.length;
-        PointLight[] samplePoints;
-        foreach (point; points)
-        {
-            samplePoints ~= PointLight(point, color, sampleIntensity);
-        }
-        return samplePoints;
+        alias createPointLight = point => PointLight(point, color, sampleIntensity);
+        auto samplePoints = points.map!createPointLight;
+        return samplePoints.array;
     }
 
-    override const(PointLight[]) samplePoints() const
+    override const(PointLight[]) samplePoints() const pure
     {
         return precomputedSamplePoints;
     }
 
-    override Nullable!Ray computeHit(const Ray ray) const
+    override Nullable!Ray computeHit(const Ray ray) const pure
     {
         return sphere.hit(ray);
     }
-
-    // TODO move to super type
-    override Color illuminationAt(const Ray hit, const Ray ray, uint depth) const
-    {
-        return color * intensity;
-    }
-
 }
 
 /// Point light

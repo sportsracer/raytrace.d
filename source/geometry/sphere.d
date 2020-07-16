@@ -7,13 +7,13 @@ import std.typecons : Nullable;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
 
-/** Three-dimensional sphere, defined by a center and radius. */
+/// Three-dimensional sphere, defined by a center and radius.
 struct Sphere
 {
     Vector center;
     double radius;
 
-    private double intersectionDistance(const Ray ray) const
+    private double intersectionDistance(in Ray ray) const pure
     {
         immutable Vector oc = ray.orig - center;
         immutable double a = ray.dir.dot(ray.dir),
@@ -22,8 +22,16 @@ struct Sphere
             discriminant = b * b - 4.0 * a * c;
         if (discriminant >= 0)
         {
-            foreach (numerator; [-b - sqrt(discriminant), -b + sqrt(discriminant)])
+            immutable sqrtDiscriminant = sqrt(discriminant);
             {
+                immutable numerator = -b - sqrtDiscriminant;
+                if (numerator > 0)
+                {
+                    return numerator / (2.0 * a);
+                }
+            }
+            {
+                immutable numerator = -b + sqrtDiscriminant;
                 if (numerator > 0)
                 {
                     return numerator / (2.0 * a);
@@ -33,7 +41,8 @@ struct Sphere
         return -1.0;
     }
 
-    Nullable!Ray hit(const Ray ray) const
+    /// Returns `Ray(intersection, surfaceNormal)` in case `ray` intersects this sphere, and null otherwise
+    Nullable!Ray hit(in Ray ray) const pure
     {
         Nullable!Ray intersection;
         immutable distance = intersectionDistance(ray);
@@ -46,8 +55,8 @@ struct Sphere
         return intersection;
     }
 
-    /** Return a point on this sphere determined by its spherical coordinates. */
-    Vector pointFromSphericalCoords(const double polar, const double azimuth) const
+    /// Return a point on this sphere determined by its spherical coordinates.
+    Vector pointFromSphericalCoords(double polar, double azimuth) const pure
     {
         return center + Vector(
             sin(polar) * cos(azimuth),
@@ -57,6 +66,7 @@ struct Sphere
     }
 
     /**
+    * Generate approximately `numPoints` points on the surface of this sphere, arranged to be roughly equally spaced.
     * Implementation of https://www.cmu.edu/biolphys/deserno/pdf/sphere_equi.pdf
     */
     Vector[] equidistantPoints(int numPoints) const
@@ -84,12 +94,46 @@ struct Sphere
     }
 }
 
+/// Ray-sphere intersection
+unittest
+{
+    import std.math : approxEqual;
+
+    immutable s = Sphere(Vector(0, 0, -2), 1);
+
+    // ray pointing straight at center
+    {
+        const r = Ray.fromTo(Vector( 0, 0, 0), Vector(0, 0, -1)),
+        hit = s.hit(r).get;
+        // intersection point
+        assert(approxEqual(hit.orig.x, 0));
+        assert(approxEqual(hit.orig.y, 0));
+        assert(approxEqual(hit.orig.z, -1));
+        // surface normal
+        assert(approxEqual(hit.dir.x, 0));
+        assert(approxEqual(hit.dir.y, 0));
+        assert(approxEqual(hit.dir.z, 1));
+    }
+
+    // ray pointing at point within sphere from "behind"
+    {
+        immutable Ray r = Ray.fromTo(Vector(1, 1, -3), Vector(0.5, 0.5, -1.5));
+        assert(!s.hit(r).isNull);
+    }
+
+    // ray pointing away from sphere
+    {
+        immutable Ray r = Ray.fromTo(Vector(0, 0, 0), Vector(0, 0, 1));
+        assert(s.hit(r).isNull);
+    }
+}
+
 /// Spherical coordinates
 unittest
 {
     import std.math : approxEqual, PI_2;
 
-    const sphere = new Sphere(Vector(1, 1, 1), 2);
+    immutable sphere = Sphere(Vector(1, 1, 1), 2);
 
     // generate a point on this sphere, and verify it's actually on the sphere's surface
     immutable point = sphere.pointFromSphericalCoords(PI_2, 3.0 * PI_2),
@@ -100,10 +144,10 @@ unittest
 /// Creation of equidistant points on sphere surface
 unittest
 {
-    const numPoints = 32;
+    immutable numPoints = 32;
     {
-        const unitSphere = Sphere(Vector(0, 0, 0), 1),
-            points = unitSphere.equidistantPoints( numPoints);
+        immutable unitSphere = Sphere(Vector(0, 0, 0), 1);
+        const points = unitSphere.equidistantPoints(numPoints);
         // The algorithm has no strong guarantees on the number of sampled points generated. Let's assert it's in the same
         // order of magnitude, at least.
         assert(numPoints / 10 < points.length);
@@ -117,8 +161,8 @@ unittest
     }
 
     {
-        const smallSphere = Sphere(Vector(0, 0, 0), 0.1),
-            points = smallSphere.equidistantPoints(numPoints);
+        immutable smallSphere = Sphere(Vector(0, 0, 0), 0.1);
+        const points = smallSphere.equidistantPoints(numPoints);
         assert(numPoints / 10 < points.length);
         assert(points.length < numPoints * 10);
     }

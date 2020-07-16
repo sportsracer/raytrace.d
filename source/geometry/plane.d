@@ -5,18 +5,20 @@ import std.typecons : Nullable;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
 
+/// A plane defined by a point on the plane, and a surface normal. Extends infinitely in all directions.
 struct Plane
 {
     Ray pointNormal;
 
-    Nullable!Ray hit(const Ray ray) const
+    /// Returns `Ray(intersection, surfaceNormal)` in case `ray` intersects this plane, and null otherwise
+    Nullable!Ray hit(in Ray ray) const pure
     {
         Nullable!Ray hit;
-        immutable double denom = pointNormal.dir.dot(ray.dir);
+        immutable denom = pointNormal.dir.dot(ray.dir);
         if (denom != 0)
         {
-            immutable planeToRay = pointNormal.orig - ray.orig;
-            immutable t = planeToRay.dot(pointNormal.dir) / denom;
+            immutable planeToRay = pointNormal.orig - ray.orig,
+                t = planeToRay.dot(pointNormal.dir) / denom;
 
             if (t > 0)
             {

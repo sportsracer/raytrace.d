@@ -1,38 +1,45 @@
 module color.color;
 
 import std.algorithm : min;
-import std.typecons : Tuple, tuple;
+import std.typecons : Tuple;
 import std.conv : to;
 
-alias RGBBytes = Tuple!(ubyte, "r", ubyte, "g", ubyte, "b");
 
+
+/// Color value in the RGB model.
 struct Color
 {
     double r, g, b;
 
-    Color opBinary(string op)(const Color rhs) const
+    Color opBinary(string op)(in Color rhs) const pure
     if (op == "+" || op == "*")
     {
         return mixin("Color(r "~op~" rhs.r, g "~op~" rhs.g, b "~op~" rhs.b)");
     }
 
-    Color opBinary(string op)(float factor) const
+    Color opBinary(string op)(float factor) const pure
     if (op == "*")
     {
         return Color(r * factor, g * factor, b * factor);
     }
 
-    RGBBytes toRGBBytes() const
+    RGBBytes toRGBBytes() const pure
     {
-        immutable ubyte _r = to!ubyte(255.0 * min(this.r, 1.0)),
-            _g = to!ubyte(255.0 * min(this.g, 1.0)),
-            _b = to!ubyte(255.0 * min(this.b, 1.0));
-        return RGBBytes(_r, _g, _b);
+        ubyte toByte(in double val)
+        {
+            return to!ubyte(255.0 * min(val, 1.0));
+        }
+        return RGBBytes(toByte(this.r), toByte(this.g), toByte(this.b));
     }
 
-    static auto black = Color(0.0, 0.0, 0.0);
-    static auto white = Color(1.0, 1.0, 1.0);
+    immutable static {
+        auto black = Color(0.0, 0.0, 0.0),
+            white = Color(1.0, 1.0, 1.0);
+    }
 }
+
+/// Representation of a color as triplet of bytes.
+alias RGBBytes = Tuple!(ubyte, "r", ubyte, "g", ubyte, "b");
 
 /// Colors can be added, multiplied and scaled by a factor
 unittest
@@ -43,14 +50,10 @@ unittest
         green = Color(0, 1, 0),
         blue = Color(0, 0, 1),
         white = red + green + blue;
-    assert(approxEqual(white.r, 1));
-    assert(approxEqual(white.g, 1));
-    assert(approxEqual(white.b, 1));
+    assert(approxEqual([white.r, white.g, white.b], 1));
 
     immutable gray = white * 0.5;
-    assert(approxEqual(gray.r, 0.5));
-    assert(approxEqual(gray.g, 0.5));
-    assert(approxEqual(gray.b, 0.5));
+    assert(approxEqual([gray.r, gray.g, gray.b], 0.5));
 
     immutable darkRed = red * gray;
     assert(darkRed.r < 1);
