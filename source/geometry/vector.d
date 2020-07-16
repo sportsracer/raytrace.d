@@ -1,27 +1,29 @@
 module geometry.vector;
 
 import std.math : acos, approxEqual, sqrt;
+import std.traits : isFloatingPoint;
 
 // Tolerance for some floating point comparisons.
 immutable epsilon = 1e-6;
 
 /// Vector of length three.
-struct Vector
+struct Vector3(T)
+if (isFloatingPoint!T)
 {
-    double x, y, z;
+    T x, y, z;
 
     /// Add and subtract vectors.
-    Vector opBinary(string op)(in Vector rhs) const pure
+    Vector3!T opBinary(string op)(in Vector3!T rhs) const pure
     if (op == "+" || op == "-")
     {
-        return mixin("Vector(x "~op~" rhs.x, y "~op~" rhs.y, z "~op~" rhs.z)");
+        return mixin("Vector3(x "~op~" rhs.x, y "~op~" rhs.y, z "~op~" rhs.z)");
     }
 
     /// Cross product.
-    Vector opBinary(string op)(in Vector rhs) const pure
+    Vector3!T opBinary(string op)(in Vector3!T rhs) const pure
     if (op == "*")
     {
-        return Vector(
+        return Vector3!T(
             y * rhs.z - z * rhs.y,
             z * rhs.x - x * rhs.z,
             x * rhs.y - y * rhs.x
@@ -29,10 +31,10 @@ struct Vector
     }
 
     /// Scale vector by a factor.
-    Vector opBinary(string op)(double rhs) const pure
+    Vector3!T opBinary(string op)(T rhs) const pure
     if (op == "*")
     {
-        return Vector(
+        return Vector3!T(
             x * rhs,
             y * rhs,
             z * rhs
@@ -57,13 +59,13 @@ struct Vector
         z *= invLength;
     }
 
-    double length() const pure
+    T length() const pure
     {
         return sqrt(length2);
     }
 
     /// Length of the vector squared; made available for comparing length of vectors without the costly sqrt.
-    double length2() const pure
+    T length2() const pure
     {
         return x * x + y * y + z * z;
     }
@@ -75,19 +77,19 @@ struct Vector
     }
 
     /// Dot product.
-    double dot(in Vector rhs) const pure
+    T dot(in Vector3!T rhs) const pure
     {
         return x * rhs.x + y * rhs.y + z * rhs.z;
     }
 
     /// True if perpendicular, i.e. at 90° angle to other vector.
-    bool perpendicularTo(in Vector other) const pure
+    bool perpendicularTo(in Vector3!T other) const pure
     {
         return approxEqual(this.dot(other), 0, 0.0, epsilon);
     }
 
     /** Compute angle between this and other vector in radians. */
-    double angleWith(in Vector other) const pure
+    double angleWith(in Vector3!T other) const pure
     {
         immutable double dot = this.dot(other),
             myLength = this.length(),
@@ -97,7 +99,7 @@ struct Vector
     }
 
     /// Reflection of this vector on a surface represented by normal
-    Vector reflect(in Vector normal) const pure
+    Vector3!T reflect(in Vector3!T normal) const pure
     in
     {
         // the implementation is simplified by assuming the surface normal is of length 1
@@ -113,8 +115,10 @@ struct Vector
     }
 }
 
+alias Vector = Vector3!double;
+
 // Helper function for unit tests
-bool approxEqualVector(in Vector v1, in Vector v2) pure
+bool approxEqualVector(T)(in Vector3!T v1, in Vector3!T v2) pure
 {
     return approxEqual(v1.x, v2.x)
         && approxEqual(v1.y, v2.y)
@@ -253,5 +257,16 @@ unittest
             vOut = vIn.reflect(normal);
         assert(approxEqualVector(vOut, Vector(1, 1, -1)));
     }
+}
 
+/// Support for multiple floating point types
+unittest
+{
+    import std.math : approxEqual;
+
+    alias Vector3r = Vector3!real;
+
+    immutable Vector3r v1 = {1.0, -1.0, 2.0}, v2 = v1 * -1.0, v3 = v1 + v2;
+    immutable real length = v3.length;
+    assert(approxEqual(length, 0));
 }
