@@ -1,7 +1,7 @@
 module window;
 
 import std.conv;
-import std.datetime.stopwatch;
+import std.experimental.logger;
 import std.parallelism;
 import std.stdio;
 
@@ -15,6 +15,7 @@ import gtk.Widget;
 
 import color.color : Color;
 import scene.scene : Scene;
+import util.logger : TimingLogger;
 
 void createWindow(string[] args, Scene scene, const uint width, const uint height)
 {
@@ -46,7 +47,7 @@ class Canvas : DrawingArea
         addOnDraw(&onDraw);
     }
 
-    void render()
+    void render(Logger logger)
     {
         immutable int width = img.getWidth(),
             height = img.getHeight(),
@@ -57,10 +58,7 @@ class Canvas : DrawingArea
         uint rowsRendered;
         void rowRendered()
         {
-            if (++rowsRendered % 100 == 0)
-            {
-                stderr.writeln(rowsRendered, "/", height, " rows rendered");
-            }
+            logger.infof(++rowsRendered % 100 == 0, "%d/%d rows rendered", rowsRendered, height);
         }
 
         // Array of row indices to iterate over
@@ -86,20 +84,15 @@ class Canvas : DrawingArea
             }
             rowRendered();
         }
+
+        logger.info("Done rendering");
     }
 
     bool onDraw(Scoped!Context context, Widget _)
     {
         if (!rendered) {
-            StopWatch stopwatch;
-            stopwatch.start();
-
-            render();
-
-            stopwatch.stop();
-            const secs = stopwatch.peek.total!"seconds";
-            stderr.writeln("Rendered scene in ", secs, "s");
-
+            auto logger = TimingLogger.createStderrLogger();
+            render(logger);
             rendered = true;
         }
 
