@@ -14,17 +14,18 @@ import scene.sphere : SphereSceneObject;
 import scene.sceneobject : SceneObject;
 import window : createWindow;
 
+/// Build a demo scene consisting of floating spheres and a reflective, water-like plane.g
 Scene buildScene(double aspectRatio)
 {
     auto scene = new Scene();
 
-    auto whiteLight = new SphericalLight(Vector(0.5, 0.5, -1.5), 0.2, Color.white, 5.0);
+    auto whiteLight = new SphericalLight(Vector(1, 0.5, -1.5), 0.2, Color.white, 5.0);
     scene.addObject(whiteLight);
 
-    auto redLight = new SphericalLight(Vector(0, -4, -3), 0.5, Color(1, 0, 0), 5.0);
+    auto redLight = new SphericalLight(Vector(0, -4, -3), 0.2, Color(1, 0, 0), 10.0);
     scene.addObject(redLight);
 
-    scene.camera = Camera.construct(Vector(0, 0, 4), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);
+    scene.camera = Camera.construct(Vector(0, 0, 6), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);
 
     // generate objects
 
@@ -51,8 +52,8 @@ Scene buildScene(double aspectRatio)
     }
 
     // bottom plane
-    auto shinyBlue = Material(Color(0.2, 0.2, 0.8), 0.4);
-    auto plane = new PlaneSceneObject(shinyBlue, Vector(0, 0, -6), Vector(0, .1, 1));
+    const shinyBlue = Material(Color(0.2, 0.2, 0.8), 0.4);
+    auto plane = new PlaneSceneObject(shinyBlue, Vector(0, 1, 0), Vector(0, -1, 0));
     scene.addObject(plane);
 
     return scene;

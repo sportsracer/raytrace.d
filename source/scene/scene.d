@@ -1,6 +1,7 @@
 module scene.scene;
 
 import std.algorithm.searching : any;
+import std.range : chain;
 import std.typecons : Nullable, Tuple;
 
 import color.color : Color;
@@ -73,12 +74,12 @@ class Scene
         Nullable!Hit closest;
         double closestDistance = double.max;
 
-        void findClosestHit(in SceneObject object) pure
+        foreach (object; chain(objects, lights))
         {
             alias isThisObject = (skipObject) => (skipObject is object);
             if (any!isThisObject(skipObjects))
             {
-                return;
+                continue;
             }
 
             immutable hit = object.computeHit(ray);
@@ -93,16 +94,6 @@ class Scene
                     closestDistance = distance;
                 }
             }
-        }
-
-        foreach (object; objects)
-        {
-            findClosestHit(object);
-        }
-
-        foreach (light; lights)
-        {
-            findClosestHit(light);
         }
 
         return closest;

@@ -118,6 +118,9 @@ unittest
     foreach (PointLight samplePoint; sphericalLight.samplePoints)
     {
         assert(samplePoint.color == Color.white);
-        assert(samplePoint.intensity < sphericalLight.intensity);
+        if (sphericalLight.samplePoints.length > 1)
+        {
+            assert(samplePoint.intensity < sphericalLight.intensity);
+        }
     }
 }

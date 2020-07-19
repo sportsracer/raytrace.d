@@ -118,7 +118,7 @@ if (isFloatingPoint!T)
 alias Vector = Vector3!double;
 
 // Helper function for unit tests
-bool approxEqualVector(T)(in Vector3!T v1, in Vector3!T v2) pure
+version (unittest) bool approxEqualVector(T)(in Vector3!T v1, in Vector3!T v2) pure
 {
     return approxEqual(v1.x, v2.x)
         && approxEqual(v1.y, v2.y)
