@@ -6,7 +6,8 @@ import std.stdio;
 import color.color : Color;
 import geometry.vector : Vector;
 import scene.camera : Camera;
-import scene.light : SphericalLight;
+import scene.light.directional : DirectionalLight;
+import scene.light.spherical : SphericalLight;
 import scene.material : Material;
 import scene.plane : PlaneSceneObject;
 import scene.scene : Scene;
@@ -24,6 +25,9 @@ Scene buildScene(double aspectRatio)
 
     auto redLight = new SphericalLight(Vector(0, -4, -3), 0.2, Color(1, 0, 0), 10.0);
     scene.addObject(redLight);
+
+    auto ambientLight = new DirectionalLight(Vector(0, 1, -1), Color.white, 20.0);
+    scene.addObject(ambientLight);
 
     scene.camera = Camera.construct(Vector(0, 0, 6), Vector(0, 0, -2), Vector(0, -1, 0), 1.0, 1.0 / aspectRatio);
 

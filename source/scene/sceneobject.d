@@ -5,7 +5,7 @@ import std.typecons : Nullable;
 import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
-import scene.light : Light, PointLight;
+import scene.light.light : Light, PointLight;
 import scene.material : Material;
 import scene.scene : Scene;
 
@@ -45,7 +45,7 @@ abstract class SolidSceneObject : SceneObject
         // compute illumination
         foreach (const Light light; scene.lights)
         {
-            foreach (PointLight lightSource; light.samplePoints)
+            foreach (PointLight lightSource; light.samplePoints(hit.orig))
             {
                 immutable Ray toLight = Ray.fromTo(hit.orig, lightSource.pos);
                 bool shadowed = false;

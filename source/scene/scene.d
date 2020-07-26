@@ -8,7 +8,7 @@ import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
 import scene.camera : Camera;
-import scene.light : Light;
+import scene.light.light : Light;
 import scene.sceneobject : SceneObject, SolidSceneObject;
 
 // How many rays are cast recursively?
