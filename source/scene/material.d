@@ -2,7 +2,7 @@ module scene.material;
 
 import std.math : cos, PI_2;
 
-import color.color : Color;
+import scene.color : Color;
 
 struct Material
 {

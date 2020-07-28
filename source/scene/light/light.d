@@ -1,8 +1,8 @@
 module scene.light.light;
 
-import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
+import scene.color : Color;
 import scene.scene : Scene;
 import scene.sceneobject : SceneObject;
 

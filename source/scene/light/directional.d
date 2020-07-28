@@ -2,9 +2,9 @@ module scene.light.directional;
 
 import std.typecons : Nullable;
 
-import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
+import scene.color : Color;
 import scene.light.light : Light, PointLight;
 
 /// Light source which casts parallel light rays; simulates a far-away light source such as the sun.

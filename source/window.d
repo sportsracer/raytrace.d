@@ -1,8 +1,5 @@
 module window;
 
-import std.conv;
-import std.experimental.logger;
-import std.parallelism;
 import std.stdio;
 
 import cairo.Context;
@@ -13,9 +10,9 @@ import gtk.Main;
 import gtk.MainWindow;
 import gtk.Widget;
 
-import color.color : Color;
+import render.image : Image, toRGBBytes;
+import scene.color : Color;
 import scene.scene : Scene;
-import util.logger : TimingLogger;
 
 void createWindow(string[] args, Scene scene, const uint width, const uint height)
 {
@@ -36,67 +33,49 @@ void createWindow(string[] args, Scene scene, const uint width, const uint heigh
 class Canvas : DrawingArea
 {
     Scene scene;
-    ImageSurface img;
+    ImageSurface imgSurface;
     bool rendered;
 
     this(Scene scene, uint width, uint height)
     {
         super(width, height);
         this.scene = scene;
-        this.img = ImageSurface.create(CairoFormat.RGB24, width, height);
+        this.imgSurface = ImageSurface.create(CairoFormat.RGB24, width, height);
         addOnDraw(&onDraw);
     }
 
-    void render(Logger logger)
+    void render()
     {
-        immutable int width = img.getWidth(),
-            height = img.getHeight(),
-            stride = img.getStride(),
+        immutable int width = imgSurface.getWidth(),
+            height = imgSurface.getHeight(),
+            stride = imgSurface.getStride(),
             depth = 4;
 
-        // Helper function to log rendering progress
-        uint rowsRendered;
-        void rowRendered()
-        {
-            logger.infof(++rowsRendered % 100 == 0, "%d/%d rows rendered", rowsRendered, height);
-        }
+        const img = scene.camera.render(scene, width, height);
 
-        // Array of row indices to iterate over
-        int[] ys;
-        foreach (int y; 0..height-1)
-        {
-            ys ~= y;
-        }
-
-        ubyte* pixels = img.getData();
-        foreach (int y; ys.parallel)
+        ubyte* pixels = imgSurface.getData();
+        foreach (y; 0..height)
         {
             ubyte* row = &pixels[y * stride];
-            foreach (int x; 0..width-1)
+            foreach (x; 0..width)
             {
-                immutable double xf = to!double(x) / width,
-                    yf = to!double(y) / height;
-                immutable Color color = scene.renderPoint(xf, yf);
+                immutable Color color = img[x, y];
                 immutable rgb = color.toRGBBytes();
                 row[x * depth] = rgb.b;
                 row[x * depth + 1] = rgb.g;
                 row[x * depth + 2] = rgb.r;
             }
-            rowRendered();
         }
-
-        logger.info("Done rendering");
     }
 
     bool onDraw(Scoped!Context context, Widget _)
     {
         if (!rendered) {
-            auto logger = TimingLogger.createStderrLogger();
-            render(logger);
+            render();
             rendered = true;
         }
 
-        context.setSourceSurface(img, 0, 0);
+        context.setSourceSurface(imgSurface, 0, 0);
         context.paint();
 
         return true;

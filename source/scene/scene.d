@@ -4,15 +4,12 @@ import std.algorithm.searching : any;
 import std.range : chain;
 import std.typecons : Nullable, Tuple;
 
-import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
-import scene.camera : Camera;
+import render.camera : Camera;
+import scene.color : Color;
 import scene.light.light : Light;
 import scene.sceneobject : SceneObject, SolidSceneObject;
-
-// How many rays are cast recursively?
-immutable renderDepth = 2;
 
 /// Point and surface normal on a scene object.
 alias Hit = Tuple!(SceneObject, "sceneObject", Ray, "intersection");
@@ -20,7 +17,7 @@ alias Hit = Tuple!(SceneObject, "sceneObject", Ray, "intersection");
 /// A collection of three-dimensional lights and objects which can be rendered, and a camera representing a viewpoint.
 class Scene
 {
-    Camera camera;
+    Camera camera; // TODO Move out from scene
     Light[] lights;
     SolidSceneObject[] objects;
 
@@ -36,13 +33,6 @@ class Scene
     {
         this.objects ~= solidSceneObject;
         solidSceneObject.scene = this;
-    }
-
-    /// Render color for ray representing the coordinates (x, y) in the camera frustum.
-    Color renderPoint(double x, double y) const pure
-    {
-        immutable ray = camera.rayForPixel(x, y);
-        return renderRay(ray, renderDepth);
     }
 
     /**

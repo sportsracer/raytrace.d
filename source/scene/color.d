@@ -1,10 +1,4 @@
-module color.color;
-
-import std.algorithm : min;
-import std.typecons : Tuple;
-import std.conv : to;
-
-
+module scene.color;
 
 /// Color value in the RGB model.
 struct Color
@@ -23,23 +17,11 @@ struct Color
         return Color(r * factor, g * factor, b * factor);
     }
 
-    RGBBytes toRGBBytes() const pure
-    {
-        ubyte toByte(in double val)
-        {
-            return to!ubyte(255.0 * min(val, 1.0));
-        }
-        return RGBBytes(toByte(this.r), toByte(this.g), toByte(this.b));
-    }
-
     immutable static {
         auto black = Color(0.0, 0.0, 0.0),
             white = Color(1.0, 1.0, 1.0);
     }
 }
-
-/// Representation of a color as triplet of bytes.
-alias RGBBytes = Tuple!(ubyte, "r", ubyte, "g", ubyte, "b");
 
 /// Colors can be added, multiplied and scaled by a factor
 unittest
@@ -59,21 +41,4 @@ unittest
     assert(darkRed.r < 1);
     assert(darkRed.g == 0);
     assert(darkRed.b == 0);
-}
-
-/// Conversion to bytes
-unittest
-{
-    immutable lightRed = Color(1, 0.5, 0.5),
-        bytes = lightRed.toRGBBytes();
-    assert(bytes.r == 255);
-    assert(bytes.g == 127);
-    assert(bytes.b == 127);
-
-    // test that "HDR" color values greater than 1.0 are truncated to 255 when converting to bytes
-    immutable hdr = Color(0.5, 2.0, 2.0),
-        hdrBytes = hdr.toRGBBytes();
-    assert(hdrBytes.r == 127);
-    assert(hdrBytes.g == 255);
-    assert(hdrBytes.b == 255);
 }

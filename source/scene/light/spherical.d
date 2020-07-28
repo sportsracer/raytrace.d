@@ -4,10 +4,10 @@ import std.array : array;
 import std.algorithm.iteration : map;
 import std.typecons : Nullable;
 
-import color.color : Color;
 import geometry.ray : Ray;
 import geometry.sphere : Sphere;
 import geometry.vector : Vector;
+import scene.color : Color;
 import scene.light.light : Light, PointLight;
 
 /// Spherical light, represented by point lights on its surface.

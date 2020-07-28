@@ -3,9 +3,9 @@ import std.getopt;
 import std.random;
 import std.stdio;
 
-import color.color : Color;
 import geometry.vector : Vector;
-import scene.camera : Camera;
+import render.camera : Camera;
+import scene.color : Color;
 import scene.light.directional : DirectionalLight;
 import scene.light.spherical : SphericalLight;
 import scene.material : Material;

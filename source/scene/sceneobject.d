@@ -2,9 +2,9 @@ module scene.sceneobject;
 
 import std.typecons : Nullable;
 
-import color.color : Color;
 import geometry.ray : Ray;
 import geometry.vector : Vector;
+import scene.color : Color;
 import scene.light.light : Light, PointLight;
 import scene.material : Material;
 import scene.scene : Scene;
